@@ -1,0 +1,2351 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>GeoGreen ქირავნობის ხელშეკრულების გენერატორი (ქარ/ინგ)</title>
+<style>
+  :root{
+    --ink:#111827;
+    --paper:#f4f6f5;
+    --paper-line:#d8dfda;
+    --accent:#22c55e;
+    --accent-dark:#15803d;
+    --accent-soft:#dcfce7;
+    --stamp:#16a34a;
+    --stamp-dark:#14532d;
+    --muted:#94a3b8;
+    --field-bg:#ffffff;
+    --field-border:rgba(148,163,184,.25);
+    --panel:#17231d;
+    --panel-2:#223128;
+    --panel-card:rgba(255,255,255,.105);
+    --panel-card-strong:rgba(255,255,255,.16);
+    --panel-line:rgba(255,255,255,.18);
+    --panel-text:#f4fff8;
+    --panel-dim:#c0d2c6;
+    --shadow-sm:0 10px 26px rgba(0,0,0,.18);
+    --shadow-md:0 18px 42px rgba(0,0,0,.26);
+    --shadow-green:0 14px 34px rgba(34,197,94,.28);
+    --radius:18px;
+  }
+
+  *{box-sizing:border-box;}
+
+  @keyframes panelIn{
+    from{opacity:0;transform:translateX(-18px);}
+    to{opacity:1;transform:translateX(0);}
+  }
+  @keyframes softFloat{
+    0%,100%{transform:translate3d(0,0,0) scale(1);}
+    50%{transform:translate3d(12px,-16px,0) scale(1.05);}
+  }
+  @keyframes fieldFade{
+    from{opacity:0;transform:translateY(10px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  @keyframes shine{
+    from{left:-130%;}
+    to{left:135%;}
+  }
+  @keyframes pulseDot{
+    0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.45);}
+    50%{box-shadow:0 0 0 9px rgba(34,197,94,0);}
+  }
+
+  body{
+    margin:0;
+    font-family:'Segoe UI', 'Noto Sans Georgian', system-ui, sans-serif;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(34,197,94,.13), transparent 26%),
+      radial-gradient(circle at 86% 4%, rgba(15,23,42,.10), transparent 32%),
+      linear-gradient(135deg,#f6f8f7 0%,#eef3f0 55%,#e8eeeb 100%);
+    color:var(--ink);
+  }
+
+  .app{display:grid;grid-template-columns: 418px 1fr;gap:0;min-height:100vh;}
+  @media (max-width: 880px){ .app{grid-template-columns: 1fr;} }
+
+  .form-pane{
+    position:relative;
+    isolation:isolate;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,0) 42%),
+      radial-gradient(circle at 15% 8%, rgba(34,197,94,.22), transparent 28%),
+      radial-gradient(circle at 100% 30%, rgba(34,197,94,.11), transparent 32%),
+      linear-gradient(160deg,#16221c 0%,#1c2a23 46%,#223128 100%);
+    border-right:1px solid rgba(15,23,42,.18);
+    padding:24px 22px 72px;
+    overflow-y:auto;
+    max-height:100vh;
+    animation:panelIn .45s cubic-bezier(.2,.75,.2,1) both;
+    box-shadow:18px 0 44px rgba(15,23,42,.14);
+  }
+  .form-pane::before,
+  .form-pane::after{
+    content:'';
+    position:absolute;
+    z-index:-1;
+    pointer-events:none;
+    border-radius:999px;
+    filter:blur(8px);
+  }
+  .form-pane::before{
+    width:210px;height:210px;
+    top:-82px;right:-82px;
+    background:rgba(34,197,94,.18);
+    animation:softFloat 6.5s ease-in-out infinite;
+  }
+  .form-pane::after{
+    width:165px;height:165px;
+    bottom:130px;left:-95px;
+    background:rgba(255,255,255,.07);
+    animation:softFloat 8s ease-in-out infinite reverse;
+  }
+  .form-pane::-webkit-scrollbar{width:10px;}
+  .form-pane::-webkit-scrollbar-track{background:#17231d;}
+  .form-pane::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#4ade80,#16a34a);border-radius:999px;border:3px solid #17231d;}
+  .form-pane::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#4ade80,#16a34a);}
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    margin-bottom:5px;
+    padding:14px 14px 13px;
+    background:linear-gradient(135deg,rgba(255,255,255,.18),rgba(255,255,255,.08));
+    border:1px solid var(--panel-line);
+    border-radius:22px;
+    box-shadow:var(--shadow-sm);
+    backdrop-filter:blur(12px);
+  }
+  .brand .mark{
+    width:14px;height:14px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #bbf7d0 0%, #22c55e 42%, #15803d 100%);
+    display:inline-block;
+    animation:pulseDot 2.25s ease-in-out infinite;
+  }
+  .brand h1{font-size:15px;letter-spacing:.035em;margin:0;font-weight:850;color:var(--panel-text);}
+  .brand-sub{
+    font-size:11.5px;
+    color:var(--panel-dim);
+    margin:10px 0 18px 18px;
+    line-height:1.5;
+  }
+
+  fieldset{
+    position:relative;
+    border:1px solid var(--panel-line);
+    padding:15px 13px 5px;
+    margin:0 0 15px;
+    background:
+      linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.075));
+    border-radius:var(--radius);
+    box-shadow:0 12px 28px rgba(15,23,42,.13);
+    transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
+    overflow:hidden;
+    backdrop-filter:blur(10px);
+  }
+  fieldset::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    background:linear-gradient(120deg,rgba(255,255,255,.10),transparent 34%,rgba(34,197,94,.08));
+    opacity:.5;
+  }
+  fieldset:hover{
+    transform:translateY(-2px);
+    box-shadow:0 18px 40px rgba(15,23,42,.18);
+    border-color:rgba(34,197,94,.34);
+    background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.095));
+  }
+  fieldset:focus-within{
+    transform:translateY(-2px);
+    border-color:rgba(34,197,94,.72);
+    box-shadow:0 0 0 4px rgba(34,197,94,.13), 0 18px 42px rgba(15,23,42,.18);
+  }
+  legend{
+    display:inline-flex;
+    align-items:center;
+    width:auto;
+    font-size:10.7px;
+    text-transform:uppercase;
+    letter-spacing:.095em;
+    color:#bbf7d0;
+    font-weight:850;
+    padding:0 4px 8px;
+    border-bottom:0;
+    margin-bottom:8px;
+    position:relative;
+    z-index:1;
+  }
+  legend::before{
+    content:'';
+    width:7px;height:7px;
+    border-radius:50%;
+    background:var(--accent);
+    margin-right:8px;
+    box-shadow:0 0 14px rgba(34,197,94,.75);
+  }
+
+  .row{margin-bottom:11px;animation:fieldFade .36s ease both;position:relative;z-index:1;}
+  .row.two{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  @media (max-width: 520px){.row.two{grid-template-columns:1fr;}}
+
+  label{
+    display:block;
+    font-size:11.7px;
+    color:#effaf2;
+    margin-bottom:5px;
+    font-weight:650;
+    letter-spacing:.01em;
+  }
+  input[type=text], input[type=number], input[type=date], select{
+    width:100%;
+    padding:10px 11px;
+    border:1px solid rgba(255,255,255,.13);
+    border-radius:12px;
+    background:rgba(255,255,255,.94);
+    font-size:13px;
+    color:#0f172a;
+    font-family:inherit;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 8px 18px rgba(0,0,0,.09);
+    transition:border-color .18s ease, box-shadow .18s ease, transform .18s ease, background .18s ease;
+  }
+  input:hover, select:hover{
+    border-color:rgba(34,197,94,.55);
+    background:#fff;
+  }
+  input:focus, select:focus{
+    outline:none;
+    transform:translateY(-1px);
+    border-color:var(--accent);
+    box-shadow:0 0 0 4px rgba(34,197,94,.17), 0 14px 26px rgba(0,0,0,.22);
+    background:#fff;
+  }
+
+  .actions{
+    position:sticky;
+    bottom:-1px;
+    background:linear-gradient(to top, rgba(22,34,28,1) 78%, rgba(22,34,28,0));
+    padding-top:18px;
+    margin-top:8px;
+    z-index:2;
+  }
+  button{
+    position:relative;
+    overflow:hidden;
+    font-family:inherit;
+    cursor:pointer;
+    border:none;
+    border-radius:15px;
+    font-size:13px;
+    font-weight:850;
+    padding:12px 15px;
+    width:100%;
+    letter-spacing:.01em;
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, filter .18s ease, background .18s ease;
+    user-select:none;
+  }
+  button::after{
+    content:'';
+    position:absolute;
+    top:0;
+    left:-130%;
+    width:52%;
+    height:100%;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+    transform:skewX(-18deg);
+    pointer-events:none;
+  }
+  button:hover::after{animation:shine .75s ease;}
+  button:hover{transform:translateY(-2px);}
+  button:active{transform:translateY(0) scale(.99);}
+  .btn-primary{
+    background:linear-gradient(135deg,#22c55e 0%, #16a34a 48%, #0f172a 100%);
+    color:#fff;
+    margin-bottom:9px;
+    box-shadow:var(--shadow-green);
+    border:1px solid rgba(134,239,172,.25);
+  }
+  .btn-primary:hover{filter:saturate(1.08);box-shadow:0 18px 34px rgba(34,197,94,.34);}
+  .btn-secondary{
+    background:linear-gradient(135deg,rgba(255,255,255,.18) 0%, rgba(255,255,255,.09) 100%);
+    border:1px solid rgba(255,255,255,.14);
+    color:#eafff0;
+    margin-bottom:8px;
+    box-shadow:0 10px 24px rgba(15,23,42,.12);
+  }
+  .btn-secondary:hover{border-color:rgba(34,197,94,.55);box-shadow:0 14px 30px rgba(15,23,42,.16);background:rgba(255,255,255,.20);}
+
+  .hint{
+    font-size:11.2px;
+    color:#c4d5ca;
+    margin-top:9px;
+    line-height:1.55;
+    padding:11px 12px;
+    border-radius:15px;
+    background:rgba(255,255,255,.10);
+    border:1px dashed rgba(255,255,255,.22);
+  }
+  .saved-list{margin-top:7px;}
+  .saved-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    padding:10px 10px;
+    background:linear-gradient(135deg,rgba(255,255,255,.16),rgba(255,255,255,.08));
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:15px;
+    margin-bottom:8px;
+    font-size:12px;
+    color:#edfdf3;
+    box-shadow:0 10px 22px rgba(15,23,42,.12);
+    transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+  }
+  .saved-item:hover{
+    transform:translateY(-2px);
+    box-shadow:0 16px 30px rgba(15,23,42,.18);
+    border-color:rgba(34,197,94,.35);
+    background:linear-gradient(135deg,rgba(255,255,255,.20),rgba(34,197,94,.08));
+  }
+  .saved-item button{width:auto;padding:6px 9px;font-size:11px;font-weight:850;border-radius:11px;}
+  .saved-item .load{background:linear-gradient(135deg,#22c55e,#15803d);color:#fff;box-shadow:0 8px 18px rgba(34,197,94,.22);}
+  .saved-item .del{background:rgba(255,255,255,.12);color:#dcfce7;border:1px solid rgba(34,197,94,.42);}
+  .saved-empty{font-size:11.5px;color:#c0d2c6;font-style:italic;}
+
+  .preview-pane{padding:34px 24px 80px;overflow-y:auto;max-height:100vh;display:flex;justify-content:center;}
+  .sheet{
+    background:#fffefb;width:100%;max-width:1020px;padding:60px 64px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.08), 0 18px 44px rgba(15,23,42,0.12);
+    border-radius:8px;font-family:'Sylfaen','Noto Serif Georgian',Georgia,serif;
+    color:#20201d;line-height:1.6;font-size:15px;
+  }
+  .doc-title-table{width:100%;border-collapse:collapse;margin-bottom:18px;}
+  .doc-title-table td{border:none;padding:0;font-weight:700;font-size:15px;vertical-align:bottom;}
+  .doc-title-table td.mid{text-align:center;}
+  .doc-title-table td.right{text-align:right;}
+  .doc-head{width:100%;border-collapse:collapse;margin:20px 0 0;}
+  .doc-head td{border:none;padding:0;font-weight:700;font-size:15px;vertical-align:bottom;width:50%;}
+  .doc-head td.en{text-align:right;}
+  .doc-plainrow{width:100%;border-collapse:collapse;margin:32px 0 6px;}
+  .doc-plainrow td{border:none;padding:0;font-size:15px;vertical-align:bottom;width:50%;}
+  .doc-plainrow td.en{text-align:right;}
+  .doc-grid{width:100%;border-collapse:collapse;margin:8px 0 6px;border:1px solid #95b99d;}
+  .doc-grid td{border:1px solid #95b99d;padding:11px 14px;vertical-align:top;width:50%;font-size:14.5px;}
+  .doc-grid td p{margin:0;text-align:left;line-height:1.6;}
+  .doc-grid td.en p{color:#3a3a36;}
+  .fill{color:#106c36;font-weight:650;}
+
+
+
+  .doc-grid.single td{width:100%;}
+  .doc-grid.single td p{text-align:left;}
+  .geo-contact{font-size:12px;line-height:1.35;margin-bottom:8px;}
+  .geo-title{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:12px;align-items:end;font-weight:700;margin-bottom:18px;}
+  .geo-title .center{text-align:center;}
+  .geo-title .right{text-align:right;}
+  .geo-section{font-weight:700;text-align:center;margin:18px 0 7px;}
+
+  /* ---- Fixed/stable side panel: no sticky overlay and no layout-moving hover ---- */
+  .form-pane{overflow-x:hidden;}
+  .actions{
+    position:static;
+    bottom:auto;
+    background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.055));
+    border:1px solid rgba(255,255,255,.16);
+    border-radius:18px;
+    padding:14px 13px 12px;
+    margin-top:16px;
+    z-index:1;
+    box-shadow:0 14px 30px rgba(15,23,42,.14);
+  }
+  fieldset:hover,
+  fieldset:focus-within,
+  input:focus,
+  select:focus,
+  button:hover,
+  button:active,
+  .saved-item:hover{
+    transform:none;
+  }
+  .btn-primary:hover{box-shadow:0 16px 30px rgba(34,197,94,.30);}
+  .btn-secondary:hover{box-shadow:0 12px 26px rgba(15,23,42,.15);}
+  .saved-item:hover{box-shadow:0 14px 26px rgba(15,23,42,.16);}
+
+
+
+  /* Final button/layout fix: no sticky movement, no text wrapping */
+  .actions{
+    position:static !important;
+    bottom:auto !important;
+    background:transparent !important;
+    padding-top:16px !important;
+    z-index:auto !important;
+  }
+  .actions button{
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:8px !important;
+    width:100% !important;
+    min-height:50px !important;
+    padding:0 14px !important;
+    line-height:1.1 !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    transform:none !important;
+  }
+  .actions button:hover,
+  .actions button:active{
+    transform:none !important;
+  }
+  .saved-item button{
+    min-height:0 !important;
+    width:auto !important;
+    padding:6px 9px !important;
+    white-space:nowrap !important;
+  }
+
+
+
+  /* =========================================================
+     FINAL FLEX/STABLE LAYOUT FIX
+     - no moving cards/buttons
+     - flexible 2-column rows that do not break
+     - clean currency select
+     - responsive sidebar + preview
+  ========================================================= */
+  html, body{min-height:100%; overflow:hidden;}
+  .app{
+    height:100vh;
+    min-height:0;
+    display:grid !important;
+    grid-template-columns:minmax(460px, 520px) minmax(0, 1fr) !important;
+    overflow:hidden;
+  }
+  .form-pane{
+    width:100% !important;
+    min-width:0 !important;
+    max-height:none !important;
+    height:100vh !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    padding:22px 24px 36px !important;
+  }
+  .preview-pane{
+    min-width:0 !important;
+    height:100vh !important;
+    max-height:none !important;
+    overflow:auto !important;
+    padding:32px 28px 56px !important;
+  }
+  .brand,
+  fieldset,
+  .actions{
+    width:100% !important;
+    max-width:100% !important;
+  }
+  fieldset{
+    padding:17px 16px 12px !important;
+    margin:0 0 17px !important;
+    overflow:visible !important;
+  }
+  fieldset:hover,
+  fieldset:focus-within,
+  input:focus,
+  select:focus,
+  button:hover,
+  button:active,
+  .saved-item:hover{
+    transform:none !important;
+  }
+  legend{
+    max-width:100% !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere !important;
+    line-height:1.25 !important;
+  }
+  .row{
+    width:100% !important;
+    min-width:0 !important;
+    margin-bottom:13px !important;
+  }
+  .row.two{
+    display:grid !important;
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    gap:12px !important;
+    align-items:start !important;
+  }
+  .row.two > div{
+    min-width:0 !important;
+    width:100% !important;
+  }
+  label{
+    min-height:0 !important;
+    line-height:1.25 !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere !important;
+  }
+  input[type=text],
+  input[type=number],
+  input[type=date],
+  select{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    height:48px !important;
+    max-width:100% !important;
+    padding:0 14px !important;
+    border-radius:13px !important;
+    font-size:13.5px !important;
+    line-height:48px !important;
+  }
+  select{
+    padding-right:40px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    font-weight:700 !important;
+    letter-spacing:.01em;
+  }
+  .actions{
+    position:static !important;
+    bottom:auto !important;
+    background:linear-gradient(180deg,rgba(255,255,255,.105),rgba(255,255,255,.055)) !important;
+    border:1px solid rgba(255,255,255,.15) !important;
+    border-radius:20px !important;
+    padding:16px !important;
+    margin-top:20px !important;
+    box-shadow:0 14px 30px rgba(0,0,0,.14) !important;
+  }
+  .actions button{
+    height:54px !important;
+    min-height:54px !important;
+    padding:0 18px !important;
+    border-radius:15px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    gap:8px !important;
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    line-height:1 !important;
+    font-size:14px !important;
+  }
+  .hint{
+    margin:12px 0 0 !important;
+    max-width:100% !important;
+    overflow-wrap:break-word !important;
+  }
+  .saved-item{
+    width:100% !important;
+    min-width:0 !important;
+    align-items:flex-start !important;
+  }
+  .saved-item > span:first-child{
+    min-width:0 !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+    white-space:nowrap !important;
+  }
+  .saved-item button{
+    height:30px !important;
+    min-height:30px !important;
+    padding:0 10px !important;
+    flex:0 0 auto !important;
+  }
+  .sheet{
+    min-width:720px !important;
+    max-width:1020px !important;
+  }
+
+  @media (max-width: 1120px){
+    .app{grid-template-columns:minmax(430px, 480px) minmax(0,1fr) !important;}
+    .form-pane{padding:20px 20px 34px !important;}
+  }
+  @media (max-width: 920px){
+    html, body{overflow:auto;}
+    .app{
+      height:auto;
+      min-height:100vh;
+      grid-template-columns:1fr !important;
+      overflow:visible;
+    }
+    .form-pane,
+    .preview-pane{
+      height:auto !important;
+      min-height:0 !important;
+      max-height:none !important;
+      overflow:visible !important;
+    }
+    .preview-pane{padding:18px 12px 44px !important;}
+  }
+  @media (max-width: 560px){
+    .row.two{grid-template-columns:1fr !important;}
+    .form-pane{padding:16px 14px 28px !important;}
+    .brand h1{font-size:14px !important;}
+    .actions button{font-size:13px !important;}
+  }
+
+
+
+  .ios-download-box{
+    margin-top:12px;
+    padding:14px;
+    border-radius:16px;
+    background:rgba(34,197,94,.12);
+    border:1px solid rgba(34,197,94,.45);
+    color:var(--panel-text);
+    text-align:center;
+    box-shadow:0 10px 24px rgba(0,0,0,.18);
+  }
+  .ios-title{font-weight:800;margin-bottom:8px;}
+  .ios-link{
+    display:flex;align-items:center;justify-content:center;
+    min-height:46px;padding:10px 12px;border-radius:13px;
+    background:#22c55e;color:#052e16;text-decoration:none;
+    font-weight:900;word-break:break-word;
+  }
+  .ios-small{font-size:12px;line-height:1.45;color:var(--panel-dim);margin-top:8px;}
+
+
+.ios-copy-btn{
+  margin-top:10px;
+  width:100%;
+  min-height:42px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.12);
+  color:#fff;
+  font-weight:800;
+}
+
+  @media print{
+    body{background:#fff !important; margin:0 !important;}
+    .form-pane{display:none !important;}
+    .app{display:block !important; min-height:auto !important;}
+    .preview-pane{display:block !important; padding:0 !important; max-height:none !important; overflow:visible !important; background:#fff !important;}
+    .sheet{box-shadow:none !important; border-radius:0 !important; max-width:none !important; width:100% !important; padding:0.35in !important; font-size:10pt !important;}
+    .doc-grid td{font-size:9pt !important; padding:4pt 5pt !important;}
+  }
+</style>
+</head>
+<body class="geogreen-loading">
+<div class="geogreen-splash" id="geogreenSplash" aria-hidden="true">
+  <div class="geogreen-splash-orb orb-one"></div>
+  <div class="geogreen-splash-orb orb-two"></div>
+  <div class="geogreen-splash-card">
+    <div class="geogreen-splash-logo"><span class="leaf leaf-a"></span><span class="leaf leaf-b"></span><span class="geogreen-splash-mark"></span></div>
+    <div class="geogreen-splash-title">GeoGreen</div>
+    <div class="geogreen-splash-sub">ხელშეკრულების გენერატორი</div>
+    <div class="geogreen-loader"><span></span></div>
+  </div>
+</div>
+<div class="app">
+
+  <!-- ============ FORM ============ -->
+  <div class="form-pane">
+    <div class="brand"><span class="mark"></span><h1>GeoGreen ხელშეკრულების გენერატორი</h1></div>
+    <p class="brand-sub">GeoGreen ქართულ-ინგლისური ქირავნობის ხელშეკრულება — ივსება მხოლოდ ცარიელი ველები</p>
+
+    <fieldset>
+      <legend>ხელშეკრულება</legend>
+      <div class="row">
+        <label>ხელშეკრულების ტიპი / Contract type</label>
+        <select id="contractCategory">
+          <option value="rental">ქირავნობის ხელშეკრულება</option>
+          <option value="deposit">ბეს ხელშეკრულება</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>დოკუმენტის ვერსია / Document version</label>
+        <select id="documentType">
+          <option value="bilingual">ქართული + English</option>
+          <option value="georgian">მხოლოდ ქართული</option>
+          <option value="georgianRussian">ქართული + Русский</option>
+        </select>
+      </div>
+      <div class="row two">
+        <div><label>თარიღი / Date</label><input type="date" id="contractDate"></div>
+        <div id="durationFieldWrap"><label>ვადა, თვე / Duration (months)</label><input type="number" id="durationMonths" value="12" min="1"></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend id="landlordLegend">გამქირავებელი / Landlord</legend>
+      <div class="row"><label>სახელი გვარი / Full name</label><input type="text" id="landlordName"></div>
+      <div class="row"><label>პირადი ნომერი / ID</label><input type="text" id="landlordId"></div>
+      <div class="row two">
+        <div><label>ტელ / Tel</label><input type="text" id="landlordPhone"></div>
+        <div><label>ელ.ფოსტა / Email</label><input type="text" id="landlordEmail"></div>
+      </div>
+      <div class="row"><label>მისამართი / Address</label><input type="text" id="landlordAddress"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend id="tenantLegend">დამქირავებელი / Tenant</legend>
+      <div class="row"><label>სახელი გვარი / Full name</label><input type="text" id="tenantName"></div>
+      <div class="row"><label>პირადი ნომერი / ID</label><input type="text" id="tenantId"></div>
+      <div class="row two">
+        <div><label>ტელ / Tel</label><input type="text" id="tenantPhone"></div>
+        <div><label>ელ.ფოსტა / Email</label><input type="text" id="tenantEmail"></div>
+      </div>
+      <div class="row"><label>მისამართი / Address</label><input type="text" id="tenantAddress"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>ობიექტი / Property</legend>
+      <div class="row"><label>მისამართი / Address</label><input type="text" id="propertyAddress"></div>
+      <div class="row"><label>საკადასტრო კოდი / Cadastral code</label><input type="text" id="cadastralCode"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>ქირა და გადახდა / Rent &amp; payment</legend>
+      <div class="row two">
+        <div><label id="amountLabel">ყოველთვიური ქირა / Monthly rent</label><input type="number" id="rentAmount" value="800" min="0"></div>
+        <div>
+          <label>ვალუტა / Currency</label>
+          <select id="currency">
+            <option value="USD">$ USD</option>
+            <option value="GEL">₾ GEL</option>
+            <option value="EUR">€ EUR</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" id="paymentDayWrap"><label>გადახდის დღე / Payment day</label><input type="number" id="paymentDay" value="20" min="1" max="31"></div>
+      <div class="row deposit-deadline-row" id="depositDeadlineWrap" hidden>
+        <label>ქირავნობის ხელშეკრულების დადების ბოლო ვადა</label>
+        <input type="text" id="contractDeadline" placeholder="მაგ: 15 ივლისი 2026" autocomplete="off">
+        <input type="hidden" id="contractDeadlineEn">
+        <input type="hidden" id="contractDeadlineRu">
+        <div class="deadline-help">ჩაწერეთ მხოლოდ ქართულად — English და Русский ვერსიებში ავტომატურად ითარგმნება.</div>
+      </div>
+    </fieldset>
+
+    <div class="actions">
+      <button class="btn-primary" id="downloadBtn" type="button" onclick="return exportWordFile(event)" ontouchend="return exportWordFile(event)" onpointerup="return exportWordFile(event)">⬇ Download Word</button>
+      <button class="btn-secondary" id="iosPdfBtn" type="button">📄 iPhone PDF / Print</button>
+      <button class="btn-secondary" id="saveBtn" type="button">💾 Save</button>
+      <button class="btn-clear" id="clearFormBtn" type="button">🧹 გასუფთავება / Clear</button>
+      <div class="ios-download-box" id="iosDownloadBox" hidden>
+        <div class="ios-title" id="iosDownloadTitle">Preparing Word file...</div>
+        <a id="manualDownloadLink" class="ios-link" href="#" download="contract.doc">Tap here to save Word file</a>
+        <button class="ios-copy-btn" id="copyWordHtmlBtn" type="button">Copy Word HTML</button>
+        <div class="ios-small" id="iosDownloadHelp">If iPhone blocks download: tap the green link, then Share → Save to Files / Open in Word. If still blocked, open this HTML in Safari, not Files preview.</div>
+      </div>
+      <p class="hint">ცხრილის სტრუქტურა (ბორდერები, სვეტები, სტრიქონები) ზუსტად იმეორებს თქვენს ორიგინალ Word ფაილს — ივსება მხოლოდ ცარიელი ველები. ციფრული თანხები ავტომატურად იწერება სიტყვიერადაც ორივე ენაზე — გადაამოწმეთ ხელმოწერამდე.</p>
+      <div class="row" style="margin-top:16px;">
+        <label>შენახული ხელშეკრულებები / Saved</label>
+        <div class="saved-list" id="savedList"><span class="saved-empty">ჯერ არაფერია შენახული</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ PREVIEW ============ -->
+  <div class="preview-pane"><div class="sheet" id="sheet"></div></div>
+</div>
+
+<script>
+const ids = ['contractCategory','documentType','contractDate','contractDeadline','contractDeadlineEn','contractDeadlineRu','durationMonths','landlordName','landlordId','landlordPhone','landlordEmail','landlordAddress',
+  'tenantName','tenantId','tenantPhone','tenantEmail','tenantAddress','propertyAddress','cadastralCode',
+  'rentAmount','currency','paymentDay'];
+
+const DAY_WORDS = ['','ერთი','ორი','სამი','ოთხი','ხუთი','ექვსი','შვიდი','რვა','ცხრა','ათი',
+  'თერთმეტი','თორმეტი','ცამეტი','თოთხმეტი','თხუთმეტი','თექვსმეტი','ჩვიდმეტი','თვრამეტი','ცხრამეტი','ოცი',
+  'ოცდაერთი','ოცდაორი','ოცდასამი','ოცდაოთხი','ოცდახუთი','ოცდაექვსი','ოცდაშვიდი','ოცდარვა','ოცდაცხრა','ოცდაათი','ოცდათერთმეტი'];
+
+const CUR_KA = {USD:'დოლარს', GEL:'ლარს', EUR:'ევროს'};
+const CUR_EN = {USD:'USD', GEL:'GEL', EUR:'EUR'};
+
+function pad(n){return String(n).padStart(2,'0');}
+function fmtSlash(iso){ if(!iso) return '___/____/____'; const [y,m,dd]=iso.split('-'); return `${dd}/${m}/${y}`; }
+function addMonthsISO(iso, months){
+  if(!iso) return '';
+  const d = new Date(iso+'T00:00:00');
+  d.setMonth(d.getMonth()+Number(months||0));
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function ordinalSuffix(n){
+  const j=n%10, k=n%100;
+  if(j===1&&k!==11) return 'st';
+  if(j===2&&k!==12) return 'nd';
+  if(j===3&&k!==13) return 'rd';
+  return 'th';
+}
+
+// ---- Georgian number to words (best-effort; review before signing) ----
+function kaUnder100(n){
+  const units=['','ერთი','ორი','სამი','ოთხი','ხუთი','ექვსი','შვიდი','რვა','ცხრა'];
+  const teens={10:'ათი',11:'თერთმეტი',12:'თორმეტი',13:'ცამეტი',14:'თოთხმეტი',15:'თხუთმეტი',16:'თექვსმეტი',17:'ჩვიდმეტი',18:'თვრამეტი',19:'ცხრამეტი'};
+  if(n<10) return units[n];
+  if(n<20) return teens[n];
+  const stem={1:'ოც',2:'ორმოც',3:'სამოც',4:'ოთხმოც'};
+  const full={1:'ოცი',2:'ორმოცი',3:'სამოცი',4:'ოთხმოცი'};
+  const mult=Math.floor(n/20), rem=n%20;
+  if(rem===0) return full[mult];
+  const remWord = rem<10?units[rem]:teens[rem];
+  return stem[mult]+'და'+remWord;
+}
+function kaUnder1000(n){
+  const hundreds=['','ასი','ორასი','სამასი','ოთხასი','ხუთასი','ექვსასი','შვიდასი','რვაასი','ცხრაასი'];
+  const h=Math.floor(n/100), rem=n%100;
+  const parts=[];
+  if(h>0) parts.push(hundreds[h]);
+  if(rem>0) parts.push(kaUnder100(rem));
+  return parts.join(' ');
+}
+function kaWords(n){
+  n = Math.round(Number(n)||0);
+  if(n===0) return 'ნული';
+  const th=Math.floor(n/1000), rem=n%1000;
+  const parts=[];
+  if(th>0) parts.push(th===1 ? 'ათასი' : kaUnder1000(th)+' ათასი');
+  if(rem>0) parts.push(kaUnder1000(rem));
+  return parts.join(' ');
+}
+
+// ---- English number to words ----
+function enUnder100(n){
+  const units=['','one','two','three','four','five','six','seven','eight','nine'];
+  const teens=['ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+  const tens=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+  if(n<10) return units[n];
+  if(n<20) return teens[n-10];
+  const t=Math.floor(n/10), r=n%10;
+  return tens[t] + (r? '-'+units[r] : '');
+}
+function enUnder1000(n){
+  const h=Math.floor(n/100), rem=n%100;
+  const parts=[];
+  if(h>0) parts.push(enUnder100(h)+' hundred');
+  if(rem>0) parts.push(enUnder100(rem));
+  return parts.join(' ');
+}
+function enWords(n){
+  n = Math.round(Number(n)||0);
+  if(n===0) return 'zero';
+  const th=Math.floor(n/1000), rem=n%1000;
+  const parts=[];
+  if(th>0) parts.push(enUnder1000(th)+' thousand');
+  if(rem>0) parts.push(enUnder1000(rem));
+  return parts.join(' ');
+}
+
+
+// ---- Two-way Georgian / English name transliteration ----
+const GEO_TO_LAT = {
+  'ა':'a','ბ':'b','გ':'g','დ':'d','ე':'e','ვ':'v','ზ':'z','თ':'t','ი':'i','კ':'k','ლ':'l','მ':'m','ნ':'n','ო':'o','პ':'p',
+  'ჟ':'zh','რ':'r','ს':'s','ტ':'t','უ':'u','ფ':'p','ქ':'k','ღ':'gh','ყ':'q','შ':'sh','ჩ':'ch','ც':'ts','ძ':'dz','წ':'ts','ჭ':'ch','ხ':'kh','ჯ':'j','ჰ':'h'
+};
+
+const LAT_TO_GEO_MULTI = [
+  ['sh','შ'], ['ch','ჩ'], ['ts','ც'], ['dz','ძ'], ['gh','ღ'], ['kh','ხ'], ['zh','ჟ']
+];
+
+const LAT_TO_GEO_SINGLE = {
+  a:'ა', b:'ბ', c:'კ', d:'დ', e:'ე', f:'ფ', g:'გ', h:'ჰ', i:'ი', j:'ჯ', k:'კ', l:'ლ', m:'მ',
+  n:'ნ', o:'ო', p:'პ', q:'ქ', r:'რ', s:'ს', t:'თ', u:'უ', v:'ვ', w:'ვ', x:'ქს', y:'ი', z:'ზ'
+};
+
+function titleCaseLatin(text){
+  return (text || '').toString().trim().replace(/[A-Za-z]+(?:[-'][A-Za-z]+)*/g, word =>
+    word.split(/([-'])/).map(part => /^[A-Za-z]+$/.test(part)
+      ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+      : part
+    ).join('')
+  );
+}
+
+function hasGeorgian(text){ return /[ა-ჰ]/.test(text || ''); }
+function hasLatin(text){ return /[A-Za-z]/.test(text || ''); }
+
+function toEnglishName(text){
+  text = (text || '').toString().trim();
+  if(!text || /^_+$/.test(text)) return text;
+  const latin = Array.from(text).map(ch => {
+    const low = ch.toLocaleLowerCase('ka-GE');
+    return GEO_TO_LAT[ch] || GEO_TO_LAT[low] || ch;
+  }).join('');
+  return titleCaseLatin(latin);
+}
+
+function romanWordToGeorgian(word){
+  let src = (word || '').toLowerCase();
+  let out = '';
+  for(let i = 0; i < src.length;){
+    let matched = false;
+    for(const [latin, geo] of LAT_TO_GEO_MULTI){
+      if(src.startsWith(latin, i)){
+        out += geo;
+        i += latin.length;
+        matched = true;
+        break;
+      }
+    }
+    if(matched) continue;
+    const ch = src[i];
+    out += LAT_TO_GEO_SINGLE[ch] || ch;
+    i++;
+  }
+  return out;
+}
+
+function toGeorgianName(text){
+  text = (text || '').toString().trim();
+  if(!text || /^_+$/.test(text)) return text;
+  return text.replace(/[A-Za-z]+(?:[-'][A-Za-z]+)*/g, word =>
+    word.split(/([-'])/).map(part => /^[A-Za-z]+$/.test(part) ? romanWordToGeorgian(part) : part).join('')
+  );
+}
+
+function normalizeNameSides(raw, fallback){
+  const original = ph(raw, fallback);
+  if(/^_+$/.test(original)) return {ka: original, en: original};
+
+  const geo = hasGeorgian(original);
+  const lat = hasLatin(original);
+
+  if(geo && !lat) return {ka: original, en: toEnglishName(original)};
+  if(lat && !geo) return {ka: toGeorgianName(original), en: titleCaseLatin(original)};
+
+  // Mixed input: keep both sides readable by converting only the missing alphabet parts.
+  return {ka: toGeorgianName(original), en: toEnglishName(original)};
+}
+
+
+// ---- Two-way Georgian / English address transliteration ----
+function titleCaseAddress(text){
+  text = titleCaseLatin(text || '');
+  // Keep common address abbreviations neat after title-casing.
+  return text
+    .replace(/\bSt\b\.?/g, 'St.')
+    .replace(/\bAve\b\.?/g, 'Ave.')
+    .replace(/\bApt\b\.?/g, 'Apt.')
+    .replace(/\bBldg\b\.?/g, 'Bldg.')
+    .replace(/\bNo\b\.?/g, 'No.');
+}
+
+function applyGeorgianAddressWordsToEnglish(text){
+  return (text || '')
+    .replace(/ქ\.\s*თბილისი/g, 'Tbilisi')
+    .replace(/ქალაქი\s+თბილისი/g, 'Tbilisi')
+    .replace(/თბილისი/g, 'Tbilisi')
+    .replace(/საქართველო/g, 'Georgia')
+    .replace(/გამზირი|გამზ\./g, 'Ave.')
+    .replace(/ქუჩა|ქ\./g, 'St.')
+    .replace(/ჩიხი/g, 'Lane')
+    .replace(/შესახვევი/g, 'Alley')
+    .replace(/რაიონი|რ-ნი/g, 'District')
+    .replace(/უბანი/g, 'District')
+    .replace(/სოფელი/g, 'Village')
+    .replace(/დაბა/g, 'Town')
+    .replace(/კორპუსი|კორპ\./g, 'Bldg.')
+    .replace(/ბინა/g, 'Apt.')
+    .replace(/სართული/g, 'Floor')
+    .replace(/ნომერი|№/g, 'No.');
+}
+
+function applyEnglishAddressWordsToGeorgian(text){
+  return (text || '')
+    .replace(/\bTbilisi\b/gi, 'თბილისი')
+    .replace(/\bGeorgia\b/gi, 'საქართველო')
+    .replace(/\bAvenue\b|\bAve\.?/gi, 'გამზ.')
+    .replace(/\bStreet\b|\bSt\.?/gi, 'ქ.')
+    .replace(/\bLane\b/gi, 'ჩიხი')
+    .replace(/\bAlley\b/gi, 'შესახვევი')
+    .replace(/\bDistrict\b/gi, 'რაიონი')
+    .replace(/\bVillage\b/gi, 'სოფელი')
+    .replace(/\bTown\b/gi, 'დაბა')
+    .replace(/\bBuilding\b|\bBldg\.?/gi, 'კორპ.')
+    .replace(/\bApartment\b|\bApt\.?/gi, 'ბინა')
+    .replace(/\bFloor\b/gi, 'სართული')
+    .replace(/\bNo\.?/gi, '№');
+}
+
+function toEnglishAddress(text){
+  text = (text || '').toString().trim();
+  if(!text || /^_+$/.test(text)) return text;
+  const prepared = applyGeorgianAddressWordsToEnglish(text);
+  const latin = Array.from(prepared).map(ch => {
+    const low = ch.toLocaleLowerCase('ka-GE');
+    return GEO_TO_LAT[ch] || GEO_TO_LAT[low] || ch;
+  }).join('');
+  return titleCaseAddress(latin).replace(/\s+/g, ' ').trim();
+}
+
+function toGeorgianAddress(text){
+  text = (text || '').toString().trim();
+  if(!text || /^_+$/.test(text)) return text;
+  const prepared = applyEnglishAddressWordsToGeorgian(text);
+  return prepared.replace(/[A-Za-z]+(?:[-'][A-Za-z]+)*/g, word =>
+    word.split(/([-'])/).map(part => /^[A-Za-z]+$/.test(part) ? romanWordToGeorgian(part) : part).join('')
+  ).replace(/\s+/g, ' ').trim();
+}
+
+function normalizeAddressSides(raw, fallback){
+  const original = ph(raw, fallback);
+  if(!original || /^_+$/.test(original)) return {ka: original, en: original};
+
+  const geo = hasGeorgian(original);
+  const lat = hasLatin(original);
+
+  if(geo && !lat) return {ka: original, en: toEnglishAddress(original)};
+  if(lat && !geo) return {ka: toGeorgianAddress(original), en: titleCaseAddress(original)};
+
+  return {ka: toGeorgianAddress(original), en: toEnglishAddress(original)};
+}
+
+function dualText(ka, en){
+  if(!ka && !en) return '';
+  if((ka || '').trim() === (en || '').trim()) return ka || en;
+  return `${ka} / ${en}`;
+}
+
+function getData(){
+  const data={};
+  ids.forEach(id=>{ const el=document.getElementById(id); data[id]=el.value; });
+  return data;
+}
+function ph(v, fb){ v=(v||'').toString().trim(); return v.length? v : fb; }
+
+// ---- table-grid helpers: mirrors the real docx (each clause = one bordered row) ----
+function row(ka, en){ return `<tr><td class="ka"><p>${ka}</p></td><td class="en"><p>${en}</p></td></tr>`; }
+function grid(rowsHtml){ return `<table class="doc-grid">${rowsHtml.join('')}</table>`; }
+function head(ka, en){ return `<table class="doc-head"><tr><td class="ka">${ka}</td><td class="en">${en}</td></tr></table>`; }
+function plain(ka, en){ return `<table class="doc-plainrow"><tr><td class="ka">${ka}</td><td class="en">${en}</td></tr></table>`; }
+
+
+function singleRow(text){ return `<tr><td class="ka"><p>${text}</p></td></tr>`; }
+function singleGrid(rowsHtml){ return `<table class="doc-grid single">${rowsHtml.join('')}</table>`; }
+function geoSection(text){ return `<div class="geo-section">${text}</div>`; }
+
+function buildGeorgianBody(d){
+  const date = fmtSlash(d.contractDate);
+  const landlordName = ph(d.landlordName, '________________________');
+  const landlordId = ph(d.landlordId, '_________________________');
+  const tenantName = ph(d.tenantName, '________________________');
+  const tenantId = ph(d.tenantId, '_____________________');
+  const address = ph(d.propertyAddress, '_________________________________________');
+  const cadastral = ph(d.cadastralCode, '___________________');
+  const rentAmt = ph(d.rentAmount, '_______');
+  const rentNum = Number(d.rentAmount)||0;
+  const rentWords = d.rentAmount ? kaWords(rentNum) : '____________';
+  const curKa = CUR_KA[d.currency] || 'დოლარს';
+  const payDay = d.paymentDay || '';
+  const payDayWords = d.paymentDay ? (DAY_WORDS[Number(payDay)] || kaWords(Number(payDay))) : '____________';
+  const duration = ph(d.durationMonths, '____');
+  const durationWords = d.durationMonths ? kaWords(Number(d.durationMonths)) : '____________';
+  const endDate = d.contractDate && d.durationMonths ? fmtSlash(addMonthsISO(d.contractDate,d.durationMonths)) : '_________________';
+  const la=ph(d.landlordAddress,''), lt=ph(d.landlordPhone,''), le=ph(d.landlordEmail,'');
+  const ta=ph(d.tenantAddress,''), tt=ph(d.tenantPhone,''), te=ph(d.tenantEmail,'');
+  const F=s=>`<span class="fill">${s}</span>`;
+  let html='';
+
+  html += `<div class="geo-contact">ტელ: 555440554<br>ელ. ფოსტა: geogreenagency@gmail.com</div>`;
+  html += `<div class="geo-title"><div>ქ. თბილისი</div><div class="center">ქირავნობის ხელშეკრულება</div><div class="right">${date}</div></div>`;
+  html += singleGrid([singleRow(`ერთის მხრივ, ${F(landlordName)} პ/ნ ${F(landlordId)} შემდგომში წოდებული, როგორც „გამქირავებელი“, და, მეორე მხრივ, ${F(tenantName)} პ/ნ ${F(tenantId)} შემდგომში წოდებული, როგორც „დამქირავებელი“, ვდებთ წინამდებარე ხელშეკრულებას.`)]);
+
+  html += `<div style="font-weight:700;margin-top:12px;">ვინაიდან:</div>`;
+  html += singleGrid([
+    singleRow('ამ ხელშეკრულების გაფორმებით მხარეები ადასტურებენ თავიანთ ნებას, შეთანხმდნენ ამ ხელშეკრულებით გათვალისწინებულ პირობებზე, ხელი მოაწერონ წინამდებარე ხელშეკრულებას და შეასრულონ ამავე ხელშეკრულებით გათვალისწინებული ვალდებულებები;'),
+    singleRow('„გამქირავებელი“ თანახმაა, მისი კუთვნილი ფართი ყოველთვიური ქირის სანაცვლოდ, ქირავნობის ფორმით გადასცეს „დამქირავებელს“;'),
+    singleRow('ამ ხელშეკრულების გაფორმების მომენტში მხარეები ადასტურებენ, რომ არ არსებობს სხვა ისეთი გარემოებები, რომლებმაც შეიძლება ხელი შეუშალონ, დააბრკოლონ ან/და შეუძლებელი გახადონ ამ ხელშეკრულების პირობების და ნაკისრი ვალდებულებების შესრულება;'),
+    singleRow('ამ გარიგებასა და შესაბამის კანონმდებლობაზე დაყრდნობით, აგრეთვე, ორმხრივ დაპირებათა და მხარეთა მიერ მისაღები სარგებლის გათვალისწინებით, წინამდებარე დოკუმენტით მხარეები თანხმდებიან შემდეგ პირობებზე:')
+  ]);
+
+  html += geoSection('1. ხელშეკრულების საგანი');
+  html += singleGrid([
+    singleRow('1.1. წინამდებარე ხელშეკრულებით „გამქირავებელი“ გადასცემს, ხოლო „დამქირავებელი“ იღებს დროებით სარგებლობაში ამ ხელშეკრულების 1.2. და 1.2.1. პუნქტებში მითითებულ ქონებას (შემდგომში — ქირავნობის საგანი). „დამქირავებელი“ ვალდებულია ამ ხელშეკრულებით დადგენილი წესით, ოდენობითა და ვადებში გადაუხადოს „გამქირავებელს“ ყოველთვიური ქირა;'),
+    singleRow(`1.2. ქირავნობით გადასაცემი ობიექტი არის უძრავი ქონება მდებარე მისამართზე: ${F(address)}. საკადასტრო კოდი: ${F(cadastral)}.`),
+    singleRow('1.2.1. უძრავ ქონებასთან ერთად დამქირავებელს გადაეცემა ასევე მოძრავი ქონება (ავეჯი და ტექნიკა).'),
+    singleRow('1.3. წინამდებარე ქირავნობის ხელშეკრულების ფარგლებში „დამქირავებელი“ უფლებამოსილია გამოიყენოს ქირავნობის საგანი მხოლოდ საცხოვრებელი მიზნით;'),
+    singleRow('1.4. დამქირავებელს არ აქვს უფლება გამქირავებლის თანხმობის გარეშე ჩაეწეროს უძრავ ქონებაში;')
+  ]);
+
+  html += geoSection('2. ქირის ოდენობა და გადახდის წესი');
+  html += singleGrid([
+    singleRow(`2.1. ყოველთვიური ქირის ოდენობა შეადგენს ${F(rentAmt)} (${F(rentWords)}) ${F(curKa)}, საქართველოს ეროვნული ბანკის მიერ გადახდის დღისათვის დადგენილი ოფიციალური გაცვლითი კურსის მიხედვით.`),
+    singleRow(`2.2. ქირის გადახდა წარმოებს ყოველთვიურად, არაუგვიანეს მიმდინარე თვის ${F(payDay || '_______')} (${F(payDayWords)}) რიცხვისა, ნაღდი ან/და უნაღდო ანგარიშსწორების წესით.`),
+    singleRow('2.3. „დამქირავებელი“ საკუთარი ხარჯებით იხდის ყველა კომუნალურ თუ სხვა გადასახადს, რომელიც საჭიროა ქირავნობის საგნის ჩვეულებისამებრ გამოსაყენებლად;'),
+    singleRow('2.4. ხელშეკრულების ხელმოწერისას დამქირავებელი იხდის პირველი და ბოლო თვის ქირას.')
+  ]);
+
+  html += geoSection('3. მხარეთა უფლება-მოვალეობები');
+  html += `<div style="font-weight:700;margin:8px 0;">3.1. „გამქირავებელი“ უფლებამოსილია:</div>`;
+  html += singleGrid([
+    singleRow('3.1.1. მოსთხოვოს დამქირავებელს შეთანხმებული ქირის გადახდა ამ ხელშეკრულების პირობების შესაბამისად.'),
+    singleRow('3.1.2. მოსთხოვოს დამქირავებელს გასაქირავებელი ქონების სათანადო წესითა და პირობებში შენახვა და დაცვა.'),
+    singleRow('3.1.3. მოსთხოვოს დამქირავებელს გასაქირავებელი ქონების დაცლა და მისთვის დაბრუნება ხელშეკრულების შეწყვეტის ან ვადის გასვლის შემთხვევაში, თუ წინამდებარე ხელშეკრულებით დადგენილი წესის შესაბამისად არ მოხდა ხელშეკრულების მოქმედების ავტომატური გაგრძელება.'),
+    singleRow('3.1.4. გამქირავებელი უფლებამოსილია წინასწარ შეთანხმებულ დროს დაათვალიეროს ქირავნობის საგანი და შეამოწმოს მისი მდგომარეობა.')
+  ]);
+  html += `<div style="font-weight:700;margin:8px 0;">3.2. „გამქირავებელი“ ვალდებულია:</div>`;
+  html += singleGrid([
+    singleRow('3.2.1. გადასცეს „დამქირავებელს“ უფლებრივად და ნივთობრივად უნაკლო ნივთი (ქირავნობის საგანი), ამ ხელშეკრულებით დადგენილი წესის, პირობებისა და ვადების დაცვით; მხარეები თანხმდებიან, რომ ხელშეკრულების ხელმოწერის მომენტისათვის ქირავნობის საგნის ნივთობრივი და უფლებრივი მდგომარეობა შეთანხმებულია და გამქირავებლისთვის არავითარი ნაკლის შესახებ არ არის ცნობილი.'),
+    singleRow('3.2.1.1. უფლებრივად უნაკლობა გულისხმობს, რომ ქირავნობის საგანი არ არის ყადაღადადებული ან სხვაგვარად უფლებრივად დატვირთული და მესამე პირს არ შეიძლება ჰქონდეს რაიმე პრეტენზია დამქირავებლის მიმართ, რამაც ქირავნობის განმავლობაში შეიძლება საფრთხის ქვეშ დააყენოს დამქირავებლის ამ ხელშეკრულებით მინიჭებული უფლებების გამოყენება.'),
+    singleRow('3.2.1.2. თუ ქირავნობის ობიექტი აღმოჩნდება ნაკლის მქონე ან დაზიანდება დამქირავებლის ბრალის გარეშე, გამქირავებელი ვალდებულია აღმოფხვრას აღნიშნული ნაკლი დამქირავებლისგან ასეთი მოთხოვნის მიღებისთანავე, ნაკლის აღმოფხვრისთვის დამქირავებლის მიერ განსაზღვრულ ვადაში, რომელიც არ უნდა იყოს 1 (ერთი) კვირაზე ნაკლები. აღნიშნული ვადის უშედეგოდ გასვლის შემდეგ, დამქირავებელი უფლებამოსილია გამქირავებელს გადაუხადოს შემცირებული ქირა, ვიდრე არ იქნება აღმოფხვრილი ქირავნობის საგნის ნაკლი.'),
+    singleRow('3.2.1.3. თუ ქირავნობის საგნის ნაკლი ან დაზიანება იმდენად მნიშვნელოვანია, რომ დამქირავებელს არ აქვს შესაძლებლობა ჯეროვნად ისარგებლოს ქირავნობის საგნით, იგი უფლებამოსილია შეწყვიტოს წინამდებარე ხელშეკრულება ნაკლის/დაზიანების აღმოფხვრისთვის გამქირავებლისთვის მიცემული ვადის გასვლისთანავე, ან ასეთი ვადის განსაზღვრის გარეშე, თუ ნათელია, რომ ნაკლის აღმოფხვრა შეუძლებელია 2 (ორი) კვირის ვადაში.'),
+    singleRow('3.2.2. გადასცეს „დამქირავებელს“ ქირავნობის საგანი ისეთ მდგომარეობაში, რომელიც უზრუნველყოფს მის გამოყენებას ამ ხელშეკრულებით განსაზღვრული მიზნისთვის;'),
+    singleRow('3.2.3. ქონების გადაცემის მომენტისათვის დაფარული ჰქონდეს ქონებასთან დაკავშირებული ყველა კომუნალური გადასახადი;'),
+    singleRow('3.2.4. უზრუნველყოს „დამქირავებელი“ ქირავნობის საგნის დაუბრკოლებელი სარგებლობით და ამგვარი სარგებლობისათვის საჭირო ინფორმაციით; აცნობოს „დამქირავებელს“ უძრავი ქონების ნაკლოვანებების შესახებ, რომელიც „გამქირავებლისათვის“ ხელშეკრულების ხელმოწერამდე იყო ცნობილი ან ცნობილი გახდება ხელმოწერის შემდეგ და რამაც შეიძლება ხელი შეუშალოს „დამქირავებელს“ ქირავნობის საგნით სარგებლობაში;'),
+    singleRow('3.2.5. დაიცვას წინამდებარე ხელშეკრულებით გათვალისწინებული პირობები;'),
+    singleRow('3.2.6. შეასრულოს წინამდებარე ხელშეკრულებით ნაკისრი სხვა ვალდებულებები.')
+  ]);
+  html += `<div style="font-weight:700;margin:8px 0;">3.3. „დამქირავებელი“ უფლებამოსილია:</div>`;
+  html += singleGrid([
+    singleRow('3.3.1. მოსთხოვოს გამქირავებელს გასაქირავებელი ქონების გადაცემა ამ ხელშეკრულებით განსაზღვრული წესითა და პირობებით;'),
+    singleRow('3.3.2. მოსთხოვოს გამქირავებელს გასაქირავებელი ქონების გადაცემა ამ ხელშეკრულებით განსაზღვრულ მდგომარეობაში;'),
+    singleRow('3.3.3. მოსთხოვოს გამქირავებელს ამ ხელშეკრულებით ნაკისრი ვალდებულებებისა და გარანტიების კეთილსინდისიერად შესრულება.')
+  ]);
+  html += `<div style="font-weight:700;margin:8px 0;">3.4. „დამქირავებელი“ ვალდებულია:</div>`;
+  html += singleGrid([
+    singleRow('3.4.1. დროულად გადაუხადოს „გამქირავებელს“ ქირა იმ ოდენობით და პირობებით, რაც გათვალისწინებულია ამ ხელშეკრულების 2.1. და 2.2. მუხლებით.'),
+    singleRow('3.4.2. შეინახოს, მოუაროს და დაიცვას ქირავნობის საგანი და ამ ხელშეკრულების დასრულების შემდეგ სათანადო მდგომარეობაში დაუბრუნოს იგი „გამქირავებელს“ ბუნებრივი ცვეთის გათვალისწინებით. უზრუნველყოს უძრავი ქონების მოვლა-პატრონობა, უსაფრთხოებისა და სანიტარულ-ჰიგიენური ნორმების დაცვა; გადაცემული ქონების „დამქირავებლის“ ბრალით გამოწვეული დაზიანების შემთხვევაში, „დამქირავებელი“ ვალდებულია აანაზღაუროს მიყენებული ზიანი;'),
+    singleRow('3.4.3. წინამდებარე ხელშეკრულების მოქმედების ვადის განმავლობაში საკუთარი სახსრებით გადაიხადოს ყველა კომუნალური და ქირავნობის საგნით ნორმალურ სარგებლობასთან დაკავშირებული სხვა სახის გადასახადები;'),
+    singleRow('3.4.4. „გამქირავებლის“ წინასწარი წერილობითი თანხმობის გარეშე არ გადასცეს დაქირავებული ქონება მესამე პირებს ქვექირავნობით;'),
+    singleRow('3.4.5. კომუნალური გადასახადების დაგვიანებით გადახდის შემთხვევაში დამქირავებელი ვალდებულია აანაზღაუროს სერვისის ხელახალი ჩართვის ხარჯებიც, ასეთის არსებობის შემთხვევაში;'),
+    singleRow('3.4.6. გამოიყენოს ქირავნობის საგანი მხოლოდ ამ ხელშეკრულებით განსაზღვრული მიზნით;'),
+    singleRow('3.4.7. განახორციელოს ამ ხელშეკრულებით და მოქმედი კანონმდებლობით მასზე დაკისრებული სხვა მოვალეობები.')
+  ]);
+
+  html += geoSection('4. ქონების სარგებლობაში გადაცემისა და დაბრუნების წესი');
+  html += singleGrid([
+    singleRow('4.1. ქონების „დამქირავებლისათვის“ გადაცემის მომენტიდან მისი მოვლის, დაცვისა და შენახვის ვალდებულება გადადის „დამქირავებელზე“;'),
+    singleRow('4.2. ქონების სარგებლობაში გადაცემა და მიღება წარმოებს ხელშეკრულების მხარეების თანდასწრებით.'),
+    singleRow('4.3. ქონების დაბრუნება ხორციელდება ქონების გამქირავებლისთვის გადაცემის გზით ამ ხელშეკრულებით დადგენილი წესისა და პირობების შესაბამისად.')
+  ]);
+
+  html += geoSection('5. მხარეთა პასუხისმგებლობა და პასუხისმგებლობისგან გათავისუფლება');
+  html += singleGrid([
+    singleRow('5.1. მხარეები ვალდებულნი არიან აუნაზღაურონ ერთმანეთს ხელშეკრულების შეუსრულებლობით გამოწვეული ზიანი;'),
+    singleRow('5.2. მხარეები პასუხს არ აგებენ ხელშეკრულების შეუსრულებლობისთვის, თუ ეს გამოწვეულია ფორს-მაჟორული გარემოებებით. ასეთი გარემოებების დადგომისას მხარეები ვალდებულნი არიან მიიღონ მათ ხელთ არსებული ყველა ზომა და შეატყობინონ მეორე მხარეს ამის შესახებ.'),
+    singleRow('5.2.1. ფორს-მაჟორულად ითვლება ისეთი გარემოებები, რომელთა დადგომის პროგნოზირება, თავიდან აცილება და/ან მიმდინარეობაზე ზემოქმედება აღემატება მხარის ძალებს, მათ შორის: სტიქიური უბედურება, საგანგებო ან საომარი მდგომარეობა, ხელისუფლების აქტები, რომლებიც მნიშვნელოვნად აბრკოლებს მხარის მიერ უფლება-მოვალეობათა განხორციელებას და სხვა გარემოებები.'),
+    singleRow('5.2.2. ფორს-მაჟორული გარემოებების გამო ვალდებულებათა შესრულების შეუძლებლობის შესახებ მხარემ დაუყოვნებლივ უნდა აცნობოს მეორე მხარეს. თუ შეტყობინების გაგზავნა შეუძლებელია, მაშინ იგი უნდა გაიგზავნოს პირველივე შესაძლებლობისთანავე.'),
+    singleRow('5.2.3. ფორს-მაჟორული გარემოებების გამო დასაშვებია ამ ხელშეკრულების პირობების გადახედვა.'),
+    singleRow('5.2.4. იმ შემთხვევაში, თუ ფორს-მაჟორული გარემოების ხანგრძლივობა 30 (ოცდაათი) დღეზე მეტ ხანს გაგრძელდა ან მისი დადგომისთანავე ცხადი გახდა, რომ მოქმედება 30 (ოცდაათი) დღეზე მეტ ხანს გაგრძელდება, მხარეები წყვეტენ ხელშეკრულების მოქმედების მიზანშეწონილობის საკითხს. მხარეების შეუთანხმებლობის შემთხვევაში, გადაწყვეტილებას შეწყვეტის შესახებ იღებს მხარე, რომლის მიმართაც ჯეროვნად არ სრულდება ვალდებულება. ხელშეკრულების ამგვარი შეწყვეტის დროს მხარეები შეძლებისდაგვარად გონივრულ ვადებში ასწორებენ ყველა ადრე არსებულ ვალდებულებას ერთმანეთის მიმართ.')
+  ]);
+
+  html += geoSection('6. ხელშეკრულების მოქმედების ვადა და შეწყვეტა');
+  html += singleGrid([
+    singleRow(`6.1. წინამდებარე ხელშეკრულება იდება ${F(duration)} (${F(durationWords)}) თვის ვადით და მოქმედებს ${F(endDate)}-მდე;`),
+    singleRow('6.1.1. ქირავნობის ვადის ათვლა დაიწყება წინამდებარე ხელშეკრულების ძალაში შესვლის დღეს. ქირავნობის ვადის ათვლა დაწყებულად უნდა ჩაითვალოს იმ შემთხვევაშიც, თუ „დამქირავებელი“ შეგნებულად, უსაფუძვლოდ აყოვნებს გასაქირავებელი ქონების მიღებას.'),
+    singleRow('6.2. ხელშეკრულების ვადის გასვლის შემდეგ ხელშეკრულება გაგრძელდება ორივე მხარის თანხმობის შემთხვევაში;'),
+    singleRow('6.2.1. საშუამავლო თანხა, რომლითაც სააგენტოს ანაზღაურება ხდება, წარმოადგენს გაწეული მომსახურების საკომისიოს და უკან არ ბრუნდება.')
+  ]);
+  html += `<div style="font-weight:700;margin:8px 0;">6.3. ხელშეკრულების შეწყვეტა</div>`;
+  html += singleGrid([
+    singleRow('6.3.1. ხელშეკრულება შეწყვეტილად ითვლება მისი ვადის ამოწურვისთანავე, 6.1. პუნქტით გათვალისწინებული პირობის დაცვით;'),
+    singleRow('6.3.2. ხელშეკრულება შეიძლება შეწყდეს მხარეთა ურთიერთშეთანხმების საფუძველზე ნებისმიერ დროს;'),
+    singleRow('6.3.3. ხელშეკრულების ცალმხრივად მოშლა დასაშვებია ერთ-ერთი მხარის მიერ, თუ ხელშეკრულების მეორე მხარე არსებითად არღვევს ამ ხელშეკრულებით შეთანხმებულ პირობებს და გაფრთხილების მიუხედავად გონივრულ ვადაში ვერ უზრუნველყოფს ხელშეკრულებით ნაკისრი ვალდებულებების შესრულებას, ასევე საქართველოს კანონმდებლობით გათვალისწინებულ სხვა შემთხვევებში;'),
+    singleRow('6.3.4. მხარეები თანხმდებიან, რომ დამქირავებლის მიერ ქირის გადახდის 10 (ათი) კალენდარული დღის გადაცილების შემთხვევაში გამქირავებელს უფლება აქვს ცალმხრივად შეწყვიტოს წინამდებარე ხელშეკრულება;'),
+    singleRow('6.3.5. წინამდებარე ხელშეკრულების 1.4. პუნქტის დარღვევის შემთხვევაში გამქირავებელი უფლებამოსილია ცალმხრივად შეწყვიტოს წინამდებარე ხელშეკრულება;'),
+    singleRow('6.3.6. დამქირავებელს უფლება აქვს მოშალოს ხელშეკრულება გამქირავებლის 30 (ოცდაათი) კალენდარული დღით ადრე გაფრთხილების შემთხვევაში. დამქირავებელი დაკარგავს წინასწარ გადახდილ ბოლო თვის ქირას.'),
+    singleRow('6.3.7. გამქირავებელს უფლება აქვს მოშალოს ხელშეკრულება დამქირავებლის 30 (ოცდაათი) კალენდარული დღით ადრე გაფრთხილების შემთხვევაში. გამქირავებელი ვალდებულია დააბრუნოს წინასწარ გადახდილი ბოლო თვის ქირა.')
+  ]);
+
+  html += geoSection('7. დავების გადაწყვეტის წესი');
+  html += singleGrid([
+    singleRow('7.1. ნებისმიერი დავა, რომელიც წარმოიშობა ამ ხელშეკრულებიდან ან ამ ხელშეკრულებასთან კავშირში, მათ შორის ნებისმიერი კითხვა მისი არსებობის, კანონიერების ან/და განმარტების შემთხვევაში, უნდა გადაწყდეს მოლაპარაკების გზით.'),
+    singleRow('7.2. თუ მოლაპარაკებას აზრი არ აქვს ან თუ მოლაპარაკებამ შედეგი არ გამოიღო, მხარეთა შორის წარმოშობილ დავას გადაწყვეტს საქართველოს სასამართლო ქართული კანონმდებლობის შესაბამისად.'),
+    singleRow('7.3. მხარეთა შეთანხმებით, პირველი ინსტანციის სასამართლოს მიერ ნებისმიერი მხარის სასარგებლოდ მიღებული გადაწყვეტილება ექვემდებარება დაუყოვნებლივ აღსრულებას.')
+  ]);
+
+  html += geoSection('8. დასკვნითი დებულებები');
+  html += singleGrid([
+    singleRow('8.1. ხელშეკრულება შედგენილია ქართულ ენაზე სამ თანაბარი ძალის მქონე ეგზემპლარად, რომელთაგან თითოეული გადაეცემა მხარეებს, ხოლო ერთი ეგზემპლარი გადაეცემა აგენტს.'),
+    singleRow('8.2. ნებისმიერი ცვლილების შეტანა ხელშეკრულებაში ხდება მხარეთა წერილობითი შეთანხმების საფუძველზე;'),
+    singleRow('8.3. მხარეები ვალდებულნი არიან რეკვიზიტების შეცვლის თაობაზე ერთმანეთს აცნობონ;'),
+    singleRow('8.4. ხელშეკრულების რომელიმე პუნქტის ბათილობა არ იწვევს მთლიანი ხელშეკრულების ბათილობას;'),
+    singleRow('8.5. ხელშეკრულება, მისი ნებისმიერი დანართი, ცვლილება ან დამატება (ასეთის არსებობის შემთხვევაში) წარმოადგენს ერთიან ხელშეკრულებას და სრულად გამოხატავს მხარეთა ნებას;'),
+    singleRow('8.6. მხარეები ადასტურებენ, რომ ისინი წინასწარ გაეცნენ ხელშეკრულებას და სრულად ესმით ამ ხელშეკრულების შინაარსი.'),
+    singleRow('8.7. ხელშეკრულებით გაუთვალისწინებელი საკითხები რეგულირდება საქართველოს მოქმედი კანონმდებლობის შესაბამისად.')
+  ]);
+
+  html += geoSection('9. მხარეთა ხელმოწერები');
+  const signatureLandlordName = ph(d.landlordName, '');
+  const signatureTenantName = ph(d.tenantName, '');
+  html += `<table class="doc-grid"><tr><td><p><b>გამქირავებელი</b></p></td><td><p><b>დამქირავებელი</b></p></td></tr>
+    <tr><td><p>${F(signatureLandlordName)}</p></td><td><p>${F(signatureTenantName)}</p></td></tr>
+    <tr><td><p>პ.ნ: ${F(landlordId)}</p></td><td><p>პ/ნ: ${F(tenantId)}</p></td></tr>
+    <tr><td><p>მის: ${F(la)}</p></td><td><p>მის: ${F(ta)}</p></td></tr>
+    <tr><td><p>ტელ: ${F(lt)}</p></td><td><p>ტელ: ${F(tt)}</p></td></tr>
+    <tr><td><p>ელ. ფოსტა: ${F(le)}</p></td><td><p>ელ. ფოსტა: ${F(te)}</p></td></tr></table>`;
+  html += `<table class="doc-plainrow" style="margin-top:34px;"><tr><td>გამქირავებელი</td><td style="text-align:left;">დამქირავებელი</td></tr><tr><td>______________________________</td><td style="text-align:left;">______________________________</td></tr></table>`;
+  return html;
+}
+
+
+const GEO_RU_MAP = {
+  'ა':'а','ბ':'б','გ':'г','დ':'д','ე':'е','ვ':'в','ზ':'з','თ':'т','ი':'и','კ':'к','ლ':'л','მ':'м','ნ':'н','ო':'о','პ':'п',
+  'ჟ':'ж','რ':'р','ს':'с','ტ':'т','უ':'у','ფ':'ф','ქ':'к','ღ':'г','ყ':'к','შ':'ш','ჩ':'ч','ც':'ц','ძ':'дз','წ':'ц','ჭ':'ч','ხ':'х','ჯ':'дж','ჰ':'х'
+};
+function toRussianText(value){
+  const s=(value||'').toString().trim();
+  if(!s || /^_+$/.test(s)) return s;
+  if(/[А-Яа-яЁё]/.test(s)) return s;
+  return Array.from(s).map(ch=>GEO_RU_MAP[ch]||GEO_RU_MAP[ch.toLocaleLowerCase('ka-GE')]||ch).join('')
+    .replace(/(^|[\s-])([а-яё])/g,(m,p,c)=>p+c.toUpperCase());
+}
+function ruWords(n){
+  n=Math.round(Number(n)||0);
+  const u=['','один','два','три','четыре','пять','шесть','семь','восемь','девять'];
+  const teens={10:'десять',11:'одиннадцать',12:'двенадцать',13:'тринадцать',14:'четырнадцать',15:'пятнадцать',16:'шестнадцать',17:'семнадцать',18:'восемнадцать',19:'девятнадцать'};
+  const tens=['','','двадцать','тридцать','сорок','пятьдесят','шестьдесят','семьдесят','восемьдесят','девяносто'];
+  const hundreds=['','сто','двести','триста','четыреста','пятьсот','шестьсот','семьсот','восемьсот','девятьсот'];
+  function under100(x){ if(x<10)return u[x]; if(x<20)return teens[x]; return tens[Math.floor(x/10)]+(x%10?' '+u[x%10]:''); }
+  function under1000(x){ return (hundreds[Math.floor(x/100)]+(x%100?' '+under100(x%100):'')).trim(); }
+  if(n===0)return 'ноль';
+  if(n<1000)return under1000(n);
+  const th=Math.floor(n/1000), rem=n%1000;
+  let thw=th===1?'одна тысяча':th===2?'две тысячи':th===3?'три тысячи':th===4?'четыре тысячи':under1000(th)+' тысяч';
+  return (thw+(rem?' '+under1000(rem):'')).trim();
+}
+const RU_CUR={USD:'долларов США',GEL:'лари',EUR:'евро'};
+const RUSSIAN_TEMPLATE_TABLES = [[["ერთის მხრივ, ______________________პ/ნ__________________ შემდგომში წოდებული, როგორც „გამქირავებელი“, და, მეორე მხრივ, ______________________(პ/ნ __________________) შემდგომში წოდებული, როგორც „დამქირავებელი“,  ვდებთ წინამდებარე ხელშეკრულებას", "С одной стороны ___________________ (л.н ____________) (далее именуемый «Арендодатель», а с другой стороны ____________________ (л.н ________________) именуемый в дальнейшем «Арендатор»."]], [["ამ ხელშეკრულების გაფორმებით მხარეები ადასტურებენ თავიანთ ნებას, შეთანხმდნენ ამ ხელშეკრულებით გათვალისწინებულ პირობებზე, ხელი მოაწერონ წინამდებარე ხელშეკრულებას და შეასრულონ ამავე ხელშეკრულებით გათვალისწინებული ვალდებულებები;", "Заключая текущее Соглашение, Стороны подтверждают свою волю согласовать условия, рассматриваемые в текущем Соглашении, подписать текущее Соглашение и соблюдать взятые на себя обязательства по текущему Соглашению;"], ["„გამქირავებელი“ თანახმაა, მისი კუთვნილი ფართი ყოველთვიური ქირის სანაცვლოდ, ქირავნობის ფორმით გადასცეს „დამქირავებელს“;", "«Арендодатель» соглашается передать имущество «Арендатору» в обмен на ежемесячную арендную плату;"], ["ამ ხელშეკრულების გაფორმების მომენტში მხარეები ადასტურებენ, რომ არ არსებობს სხვა ისეთი გარემოებები, რომლებმაც შეიძლება, ხელი შეუშალონ, დააბრკოლონ ან/და შეუძლებელი გახადონ ამ ხელშეკრულების პირობების და ნაკისრი ვალდებულებების შესრულება;", "На момент подписания текущего Договора, Стороны подтверждают отсутствие иных обстоятельств, которые могут воспрепятствовать, помешать и/или сделать невозможным выполнение условий текущего Договора;"], ["ამ გარიგებასა და შესაბამის კანონმდებლობაზე დაყრდნობით, აგრეთვე, ორმხრივ დაპირებათა და მხარეთა მიერ მისაღები სარგებლის  გათვალისწინებით, წინამდებარე დოკუმენტით მხარეები თანხმდებიან შემდეგ პირობებზე:", "В соответствии с текущим соглашением и соответствующим законодательством, а также двусторонними обещаниями и выгодами, полученными Сторонами, Стороны соглашаются на следующие условия:"]], [["1.1 წინამდებარე ხელშეკრულებით „გამქირავებელი“  გადასცემს, ხოლო „დამქირავებელი“ იღებს დროებით სარგებლობაში ამ ხელშეკრულების 1.2. 1.2.1. პუნქტში მითითებულ ქონებას (შემდგომში - ქირავნობის საგანი) „დამქირავებელი“ ვალდებულია, ამ ხელშეკრულებით დადგენილი წესით, ოდენობითა და ვადებში გადაუხადოს „გამქირავებელს“ ყოველთვიური ქირა;", "1.1 Текущим договором «Арендодатель» передаёт, а «Арендатор» получает временное пользование имуществом, определенное в пункте 1.2. 1.2.1. (далее - Предмет аренды/имущество) текущего Договора. С другой стороны, «Арендатор» обязан ежемесячно выплачивать арендную плату в размере и в сроки, установленные текущим Договором;"], ["1.2ქირავნობით გადასაცემი ობიექტი არის უძრავი ქონება მდებარე მისამართზე: _________________________________________საკადასტრო კოდი: ___________________", "1.2 Предметом аренды является недвижимое имущество: расположенное по Адресу: ___________________________. Кадастровый код: ___________________________"], ["1.2.1უძრავ ქონებასთან ერთად დამქირავებელს გადაეცემა ასევე მოძრავი ქონება (ავეჯი და ტექნიკა).", "1.2.1 . Вместе с недвижимым имуществом Арендодатель также передает движимое имущество (мебель и технику)."], ["1.3 წინამდებარე ქირავნობის ხელშეკრულების ფარგლებში „დამქირავებელი“ უფლებამოსილია, გამოიყენოს ქირავნობის საგანი მხოლოდ საცხოვრებელი მიზნით;", "По текущему Договору «Арендатор» имеет право использовать имущество только для проживания;"], ["1.4დამქირავებელს არ აქვს უფლება გამქირავებლის თანხმობის გარეშე ჩაეწეროს უძრავ ქონებაში;", "Арендатор не имеет права прописаться в недвижимость без согласия арендодателя;"]], [["2.1 ყოველთვიური ქირის ოდენობა შეადგენს ____(________) ____________________, საქართველოს ეროვნული ბანკის მიერ გადახდის დღისათვის დადგენილი ოფიციალური გაცვლითი კურსის მიხედვით.", "2.1 Ежемесячная арендная плата составляет ____ (________) ___________________по официальному курсу Национального банка Грузии на дату оплаты."], ["2.2 ქირის გადახდა წარმოებს ყოველთვიურად, არაუგვიანეს მიმდინარე თვის  ______(_________) რიცხვისა ნაღდი ან/და უნაღდო ანგარიშსწორების წესით.", "2.2 Арендная плата уплачивается ежемесячно, не позднее ___(_____) числа каждого текущего месяца безналичнм или наличным средством."], ["2.3 „დამქირავებელი“ საკუთარი ხარჯებით იხდის ყველა კომუნალურ თუ სხვა გადასახადს, რომელიც საჭიროა ქირავნობის საგნის ჩვეულებისამებრ გამოსაყენებლად;", "2.3 «Арендатор» обязан оплатить все коммунальные платежи за свой счет. «Арендатор» также покрывает все расходы, связанные с нормальным использованием имущества;"], ["2.4 ხელშეკრულების ხელმოწერისას დამქირავებელი იხდის პირველი და ბოლო თვის ქირას.", "2.4 При заключении договора Арендатор вносит арендную плату за первый и последний месяц."]], [["3.1.1 გადასცეს „დამქირავებელს” უფლებრივად და ნივთობრივად უნაკლო ნივთი (ქირავნობის საგანი), ამ ხელშეკრულებით დადგენილი წესის, პირობებისა და ვადების დაცვით; მხარეები თანხმდებიან, რომ ხელშეკრულების ხელმოწერის მომენტისათვის ქირავნობის საგნის ნივთობრივი და უფლებრივი მდგომარეობა შეთანხმებულია და გამქირავებლისთვის არავითარი ნაკლის შესახებ არ არის ცნობილი.", "3.1.1 Передать предмет аренды «Арендатору» без каких-либо материальных или юридических недостатков, в порядке, на условиях и в сроки, установленные текущим договором. Стороны соглашаются, что на момент заключения текущего договора, материальное и юридическое состояние предмета аренды и отсутствие дефектов арендодателю известны."], ["3.1.1.1 უფლებრივად უნაკლობა გულისხმობს, რომ ქირავნობის საგანი არ არის ყადაღადადებული, ან სხვაგვარად უფლებრივად დატვირთული და მესამე პირს არ შეიძლება ჰქონდეს რაიმე პრეტენზია დამქირავებლის მიმართ, რამაც ქირავნობის განმავლობაში, შეიძლება საფრთხის ქვეშ დააყენოს დამქირავებლის ამ ხელშეკრულებით მინიჭებული უფლებების გამოყენება.", "3.1.1.1 Свободный от юридических дефектов означает, что предмет аренды не конфискован или иным образом не обременен, и никакое третье лицо не может иметь каких-либо претензий к арендатору, которые могут поставить под угрозу осуществление прав, предоставленных арендатору по текущему договору."], ["3.1.1.2 თუ ქირავნობის ობიექტი აღმოჩნდება ნაკლის მქონე ან დაზიანდება დამქირავებლის ბრალის გარეშე, გამქირავებელი ვალდებულია აღმოფხვრას აღნიშნული ნაკლი დამქირავებლისგან ასეთი მოთხოვნის მიღებისთანავე, ნაკლის აღმოფხვრისთვის დამქირავებლის მიერ განსაზღვრულ ვადაში, რომელიც არ უნდა იყოს 1 (ერთი) კვირაზე ნაკლები. აღნიშნული ვადის უშედეგოდ გასვლის შემდეგ, დამქირავებელი უფლებამოსილია გამქირავებელს გადაუხადოს შემცირებული ქირა (ქირა შემცირდება იმ ოდენობით, რა ოდენობითაც შემცირდა ნივთის ვარგისიანობა ნაკლის გამო) ვიდრე არ იქნება აღმოფხვრილი ქირავნობის საგნის ნაკლი.", "3.1.1.2 Если предмет аренды окажется с дефектом или будет поврежден не по вине арендатора, арендодатель обязан устранить этот недостаток или повреждение по получении такого требования от арендатора, в срок, указанный арендатором, который должен быть не менее 1 (одной) недели. По истечении этого срока арендатор вправе уплачивать арендодателю уменьшенную арендную плату (размер арендной платы уменьшается пропорционально сумме, на которую из-за недостатка уменьшается пригодность предмета) до устранения недостатка."], ["3.1.1.3 თუ ქირავნობის საგნის ნაკლი ან დაზიანება იმდენად მნიშვნელოვანია, რომ დამქირავებელს არ აქვს შესაძლებლობა ჯეროვნად ისარგებლოს ქირავნობის საგნით, იგი უფლებამოსილია შეწყვიტოს წინამდებარე ხელშეკრულება ნაკლის/დაზიანების აღმოფხვრისთვის გამქირავებლისთვის მიცემული ვადის გასვლისთანავე, ან ასეთ ვადის განსაზღვრის გარეშე, თუ ნათელია, რომ ნაკლის აღმოფხვრა შეუძლებელი არის 2 (ორი) კვირის ვადაში.", "3.1.1.3 Если дефект или ущерб предмета аренды настолько значителен, что арендатор не имеет возможности использовать предметом аренды по назначению, он вправе расторгнуть текущий договор по истечении срока, установленного им арендодателю. На устранение дефекта или повреждения, либо без указания срока, если выясняется, что устранение невозможно в течение 2 (двух) недель."], ["3.1.2 გადასცეს „დამქირავებელს“ ქირავნობის საგანი ისეთ მდგომარეობაში, რომელიც უზრუნველყოფს მის გამოყენებას ამ ხელშეკრულებით განსაზღვრული მიზნისთვის;", "3.1.2 Передать имущество «Арендатору» в состоянии, обеспечивающем его использование в целях, изложенных в текущем Договоре;"], ["3.1.3 ქონების გადაცემის მომენტისათვის დაფარული ჰქონდეს ქონებასთან დაკავშირებული ყველა კომუნალური გადასახადი;", "3.1.3 К моменту передачи имущества покрыть все коммунальные платежи, связанные с имуществом;"], ["3.1.4 უზრუნველყოს „დამქირავებელი“ ქირავნობის საგნის დაუბრკოლებელი სარგებლობით და ამგვარი სარგებლობისათვის საჭირო ინფორმაციით, აცნობოს „დამქირავებელს“ უძრავი ქონების ნაკლოვანებების შესახებ, რომელიც „გამქირავებლისათვის“ ხელშეკრულების ხელმოწერამდე იყო ცნობილი ან ცნობილი გახდება ხელმოწერის შემდეგ და რამაც შეიძლება, ხელი შეუშალოს „დამქირავებელს“ ქირავნობის საგნით სარგებლობაში;", "3.1.4 Предоставлять «Арендатору» бесперебойное пользование имуществом и информацию для такого использования, информировать «Арендатора» о недостатках имущества, которые были известны «Арендодателю» до подписания договора или стали известны после подписания, которые могут препятствовать «Арендатор» для использования имущества;"], ["3.1.5 დაიცვას წინამდებარე ხელშეკრულებით გათვალისწინებული პირობები;", "3.1.5 Соблюдать условия, предусмотренные текущим Соглашением;"], ["3.1.6 შეასრულოს წინამდებარე ხელშეკრულებით ნაკისრი სხვა ვალდებულებები.", "3.1.6 Выполнять другие обязательства, взятые на себя текущим Соглашением."]], [["3.2.1 დროულად გადაუხადოს „გამქირავებელს“ ქირა იმ ოდენობით და პირობებით, რაც გათვალისწინებულია ამ ხელშეკრულების 2.1. და 2.2 მუხლებით.", "3.2.1 Своевременно вносить арендную плату в размере, соответствующем условиям, указанным в пункте 2.1 и 2.2   текущего договора;"], ["3.2.2 შეინახოს, მოუაროს და დაიცვას ქირავნობის საგანი და ამ ხელშეკრულების დასრულების შემდეგ სათანადო მდგომარეობაში დაუბრუნოს იგი „გამქირავებელს“ ბუნებრივი ცვეთის გათვალისწინებით. უზრუნველყოს უძრავი ქონების მოვლა-პატრონობა, უსაფრთხოებისა და სანიტარულ-ჰიგიენური ნორმების დაცვა, გადაცემული ქონების „დამქირავებლის“ ბრალით გამოწვეული დაზიანების შემთხვევაში, „დამქირავებელი“  ვალდებულია, აანაზღაუროს მიყენებული ზიანი;", "3.2.2 Хранить и охранять имущество и вернуть его «Арендодателю» в надлежащем состоянии после заключения текущего договора с учетом естественных лишений. Соблюдать охрану техники безопасности и санитарно-гигиенических норм, а в случае причинения ущерба, допущенного по вине «Арендатора», возместить ущерб;"], ["3.2.3 წინამდებარე ხელშეკრულების მოქმედების ვადის განმავლობაში საკუთარი სახსრებით გადაიხადოს ყველა კომუნალური და ქირავნობის საგნით ნორმალურ სარგებლობასთან დაკავშირებული სხვა სახის გადასახადები;", "3.2.3 В течение срока действия текущего договора оплачивать коммунальные платежи и все платежи, необходимые для нормального использования имущества, за счет собственных средств;"], ["3.2.4 „გამქირავებლის“ წინასწარი წერილობითი თანხმობის გარეშე არ გადასცეს დაქირავებული ქონება მესამე პირებს ქვექირავნობით;", "3.2.4 Не передавать имущество третьим лицам в субаренду без предварительного письменного согласия «Арендодателя»;"], ["3.2.5 გამოიყენოს ქირავნობის საგანი  მხოლოდ ამ ხელშეკრულებით განსაზღვრულ მიზნით;", "3.2.5 Использовать имущество только для целей, указанных в текущем договоре;"], ["3.2.6 გამქირავებელი უფლებამოსილია წინასწარ შეთანხმებულ დროს, დაათვალიეროს ქირავნობის საგანი და შეამოწმოს მისი მდგომარეობა;", "3.2.6 Предоставить «Арендодателю» возможность посещения и проверку состояния имущества в установленное время (которое устанавливается сторонами заранее)."], ["3.2.7 განახორციელოს ამ ხელშეკრულებით და მოქმედი კანონმდებლობით მასზე დაკისრებული სხვა მოვალეობები.", "3.2.7 Выполнять иные обязательства в соответствии с текущим соглашением и применимым законодательством."]], [["4.1 ქონების „დამქირავებლისათვის“ გადაცემის მომენტიდან მისი მოვლის, დაცვისა და შენახვის ვალდებულება გადადის „დამქირავებელზე“;", "4.1 Обязанность по содержанию, охране и хранению имущества переходит от «Арендодателя» к «Арендатору» с момента передачи;"]], [["5.1 მხარეები ვალდებულნი არიან, აუნაზღაურონ ერთმანეთს ხელშეკრულების შეუსრულებლობით გამოწვეული ზიანი;", "5.1 Стороны обязаны возместить друг другу ущерб по текущему Договору."], ["5.2 მხარეები პასუხს არ აგებენ ხელშეკრულების შეუსრულებლობისთვის, თუ ეს გამოწვეულია ფორს-მაჟორული გარემოებებით.", "5.2. Стороны не несут ответственности за неисполнение договора, если оно вызвано обстоятельствами непредвиденной силой;"], ["5.2.1 ფორს-მაჟორულად ითვლება ისეთი გარემოებები, რომელთა დადგომის პროგნოზირება, თავიდან აცილება და/ან მიმდინარეობაზე ზემოქმედება აღემატება მხარის ძალებს, მათ შორის: სტიქიური უბედურება, საგანგებო ან საომარი მდგომარეობა, ხელისუფლების აქტები, რომლებიც მნიშვნელოვნად აბრკოლებს მხარის მიერ უფლება-მოვალეობათა განხორციელებას და სხვა გარემოებები.", "5.2.1 Непредвиденной силой считаются обстоятельства, прогнозирование, предотвращение и/или влияние которых на ход деятельности Стороны превышает возможности Сторон, в том числе: стихийное бедствие, чрезвычайное или военное положение, акты органов власти, существенно препятствующие осуществлению прав и обязанностей Стороны и иные обстоятельства;"], ["5.2.2 ფორს-მაჟორული გარემოებების გამო ვალდებულებათა შესრულების შეუძლებლობის შესახებ მხარემ დაუყოვნებლივ უნდა აცნობოს მეორე მხარეს. თუ შეტყობინების გაგზავნა შეუძლებელია, მაშინ იგი უნდა გაიგზავნოს პირველივე შესაძლებლობისთანავე.", "5.2.2 Сторона обязана незамедлительно уведомить другую сторону о невозможности исполнения обязательств в связи с обстоятельствами непреодолимой силы, в случае невозможности отправки сообщения стороны должны отправить его немедленно при первой же возможности."], ["5.2.3 ფორს-მაჟორული გარემოებების გამო დასაშვებია ამ ხელშეკრულების პირობების გადახედვა. 5.2.4 იმ შემთხვევაში თუ ფორსმაჟორული გარემოების ხანგრძლივობა 30 (ოცდაათი) დღეზე მეტ ხანს გაგრძელდა ან მისი დადგომისთანავე ცხადი გახდა, რომ მოქმედება 30 (ოცდაათი) დღეზე მეტ ხანს გაგრძელდება, მხარეები წყვეტენ ხელშეკრულების მოქმედების მიზანშეწონილობის საკითხს. მხარეების შეუთანხმებლობის შემთხვევაში, გადაწყვეტილებას შეწყვეტის შესახებ, იღებს მხარე, რომლის მიმართაც ჯეროვნად არ სრულდება ვალდებულება. ხელშეკრულების ამგვარი შეწყვეტის დროს მხარეები შეძლებისდაგვარად გონივრულ ვადებში ასწორებენ ყველა ადრე არსებულ ვალდებულებებს ერთმანეთის მიმართ.", "5.2.3 В случае возникновения форс-мажорных обстоятельств, допускается пересмотр условий текущего договора. 5.2.4 Если продолжительность действия обстоятельств непреодолимой силы составила 30 (тридцать) календарных дней или стало ясно, что они будут продолжаться в течение 30 (тридцати) календарных дней, Стороны принимают решение о целесообразности расторжения договора. В случае возникновения разногласий решение о расторжении договора будет приниматься стороной, в отношении которой обязательства не выполняются надлежащим образом. В случае такого нарушения договора Стороны обязуются исправить все имеющиеся обязательства друг с другом в разумные сроки."]], [["6.1 წინამდებარე ხელშეკრულება იდება _____(__________) თვის ვადით და მოქმედებს  _____________ მდე;", "6.1 Текущий Договор заключен на ____(______________)месяц  и действует до __________________;"], ["6.2 ხელშეკრულების ვადის გასვლის შემდეგ ხელშეკრულება გაგრძელდება, ორივე მხარის თანხმობის შემთხვევაში;", "6.2 По истечении срока договора он может быть продлен, если обе стороны согласны на продление;"], ["6.2.1 საშუამავლო თანხა, რომლითაც სააგენტოს ანაზღაურება ხდება წარმოადგენს გაწეული მომსახურების საკომისიოს და უკან არ ბრუნდება.", "6.2.1 Промежуточная сумма, с помощью которой возмещается агентству, является комиссией за оказанные услуги и не возвращается."]], [["6.3.1 ხელშეკრულება შეწყვეტილად ითვლება მისი ვადის ამოწურვისთანავე 6.1. პუნქტით გათვალისწინებული პირობის დაცვით;", "6.3.1 Договор расторгается по истечении срока с учетом пункта 6.1."], ["6.3.2 ხელშეკრულება შეიძლება, შეწყდეს მხარეთა ურთიერთშეთანხმების საფუძველზე ნებისმიერ დროს;", "6.3.2 Договор может быть расторгнут по взаимному согласию сторон;"], ["6.3.3 ხელშეკრულების ცალმხრივად მოშლა დასაშვებია ერთ-ერთი მხარის მიერ, თუ ხელშეკრულების მეორე მხარე არსებითად არღვევს ამ ხელშეკრულებით შეთანხმებულ პირობებს და გაფრთხილების მიუხედავად გონივრულ ვადაში ვერ უზრუნველყოფს ხელშეკრულებით ნაკისრი ვალდებულებების შესრულებას. ასევე საქართველოს კანონმდებლობით გათვალისწინებულ სხვა შემთხვევებში;", "6.3.3 Одностороннее расторжение договора допускается одной из Сторон, если другая Договаривающаяся Сторона существенно нарушает текущий Договор, несмотря на предупреждения второй стороны, или не выполняет в разумныесроки взятые на себя Договором обязательства. Текущий договор может быть расторгнут также в иных случаях, предусмотренных законодательством Грузии;"], ["6.3.4 მხარეები თანხმდებიან, რომ დამქირავებლის მიერ ქირის გადახდის 10 (ათი) კალენდარული დღის გადაცილების შემთხვევაში გამქირავებელს უფლება აქვს ცალმხრივად შეწყვიტოს წინამდებარე ხელშეკრულება;", "6.3.4 Стороны соглашаются, что в случае просрочки арендатором арендной платы на 10 (десять) календарных дней, арендодатель вправе в одностороннем порядке расторгнуть текущий договор;"], ["6.3.5 წინამდებარე ხელშეკრულების 1.4 პუნქტის დარღვევის შემთხვევაში გამქირავებელი უფლებამოსილია ცალმხრივად შეწყვიტოს წინამდებარე ხელშეკრულება;", "6.3.5 В случае нарушения пункта 1.4 текущего договора, арендодатель вправе в одностороннем порядке расторгнуть текущий договор;"], ["6.3.6 დამქირავებელს უფლება აქვს, მოშალოს ხელშეკრულება გამქირავებლის 30 (ოცდაათი) კალენდარული დღით ადრე გაფრთხილების შემთხვევაში. დამქირავებელი კარგავს წინასწარ გადახდილ ბოლო თვის ქირას .", "6.3.6 Арендатор имеет право расторгнуть договор, уведомив об этом арендодателя за 30 (тридцать) календарных дней. Арендатор теряет сумму за последний месяц."], ["6.3.7 გამქირავებელს უფლება აქვს მოშალოს ხელშეკრულება დამქირავებლის 30 (ოცდაათი) კალენდარული დღით ადრე გაფრთხილების შემთხვევაში. გამქირავებელი ვალდებულია უკან დაააბრუნოს წინასწარ გადახდილი ბოლო თვის ქირა .", "6.3.7 «Арендодатель» имеет право расторгнуть текущее Соглашение, направив «Арендатору» предварительное уведомление за 30 (тридцать) календарных дней. Арендодатель обьязан вернуть сумму за последний месяц."]], [["7.1 ნებისმიერი დავა, რომელიც წარმოიშობა ამ ხელშეკრულებიდან ან ამ ხელშეკრულებასთან კავშირში, მათ შორის ნებისმიერი კითხვა მისი არსებობის, კანონიერების ან/და განმარტების შემთხვევაში უნდა გადაწყდეს მოლაპარაკების გზით.", "7.1 Любой спор, возникающий из текущего Соглашения или в связи с ним, включая любые вопросы о его существовании, законности, толковании, исполнении, нарушении или расторжении, разрешается путем переговоров;"], ["7.2 თუ მოლაპარაკებას აზრი არ აქვს ან თუ მოლაპარაკებამ შედეგი არ გამოიღო, მხარეთა შორის წარმოშობილ დავას გადაწყვეტს  საქართველოს სასამართლო ქართული კანონმდებლობის შესაბამისად.", "7.2 Если переговоры не имеют смысла или переговоры не дали результатов, спор, возникающий между сторонами, будет решаться судом Грузии в соответствии с законодательством Грузии."], ["7.3 მხარეთა შეთანხმებიბით, პირველი ინსტანციის სასამართლოს მიერ ნებისმიერი მხარის სასარგებლოდ მიღებული გადაწყვეტილება ექვემდებარება დაუყოვნებლივ აღსრულებას.", "7.3 По соглашению сторон решение суда первой инстанции подлежит немедленному исполнению."]], [["8.1 ხელშეკრულება შედგენილია ქართულ და რუსულ ენაზე ორ თანაბარი ძალის მქონე სამ ეგზემპლარად, რომელთაგან თითოეული გადაეცემა მხარეებს, ხოლო ერთი ეგზემპლარი გადაეცემა აგენტს.", "8.1 Текущее Соглашение составлено на грузинском и русском языках в трех идентичных экземплярах, которые хранятся у сторон а один экземпляр у риелтора."], ["8.2 ნებისმიერი ცვლილების შეტანა ხელშეკრულებაში ხდება მხარეთა წერილობითი შეთანხმების საფუძველზე;", "8.2 Любые изменения текущего Соглашения должны быть согласованы сторонами в письменной форме. Любые поправки к текущему договору считаются его частью;"], ["8.3 მხარეები ვალდებულნი არიან რეკვიზიტების შეცვლის თაობაზე ერთმანეთს აცნობონ ცვლილებიდან 15 (თხუთმეტი) კალენდარული დღის ვადაში;", "8.3 Стороны должны в течение 15 (пятнадцати) календарных дней информировать друг друга о любых изменениях, телефонов и других требований;"], ["8.4 ხელშეკრულების რომელიმე პუნქტის ბათილობა არ იწვევს მთლიანი ხელშეკრულების ბათილობას;", "8.4 Недействительность любого из условий договора не влечет недействительности всего договора;"], ["8.5 ხელშეკრულება, მისი ნებისმიერი დანართი, ცვლილება ან დამატება (ასეთის არსებობის შემთხვევაში) წარმოადგენს ერთიან ხელშეკრულებას და სრულად გამოხატავს მხარეთა ნებას;", "8.5 Договор, любые его приложения, изменения, изменения или дополнения (в случае наличия) составляют единый договор и полностью выражают волю Сторон."], ["8.6 მხარეები ადასტურებენ, რომ ისინი წინასწარ გაეცნენ ხელშეკრულებას მათ სრულად ესმით ამ ხელშეკრულების შინაარსი.", "8.6 Стороны заявляют, что они имеют полное право подписать текущий договор и взять на себя обязательства, описанные в этом договоре."]], [["გამქირავებელი / Арендодатель", "დამქირავებელი /  Арендатор"], ["პ.ნ / И. Н.", "პ.ნ / И. Н."], ["მის / Адрес", "მის / Адрес"], ["ტელ / тел", "ტელ / тел"], ["ელ. ფოსტა / Эл. почта", "ელ. ფოსტა / Эл. почта"]]];
+function escHtml(v){ return (v??'').toString().replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function buildGeorgianRussianBody(d){
+  const date=fmtSlash(d.contractDate), F=s=>`<span class="fill">${escHtml(s)}</span>`;
+  const ln=ph(d.landlordName,'______________________'), tn=ph(d.tenantName,'______________________');
+  const li=ph(d.landlordId,'__________________'), ti=ph(d.tenantId,'__________________');
+  const lnr=toRussianText(ln), tnr=toRussianText(tn);
+  const addr=ph(d.propertyAddress,'_________________________________________'), addrr=toRussianText(addr);
+  const cad=ph(d.cadastralCode,'___________________');
+  const rent=ph(d.rentAmount,'____'), rentN=Number(d.rentAmount)||0;
+  const rentKa=d.rentAmount?kaWords(rentN):'________', rentRu=d.rentAmount?ruWords(rentN):'________';
+  const curKa=CUR_KA[d.currency]||'დოლარს', curRu=RU_CUR[d.currency]||'долларов США';
+  const pd=ph(d.paymentDay,'___'), pdKa=d.paymentDay?(DAY_WORDS[Number(d.paymentDay)]||kaWords(Number(d.paymentDay))):'_____', pdRu=d.paymentDay?ruWords(Number(d.paymentDay)):'_____';
+  const dur=ph(d.durationMonths,'____'), durKa=d.durationMonths?kaWords(Number(d.durationMonths)):'________', durRu=d.durationMonths?ruWords(Number(d.durationMonths)):'________';
+  const end=d.contractDate&&d.durationMonths?fmtSlash(addMonthsISO(d.contractDate,d.durationMonths)):'__________________';
+  const data=JSON.parse(JSON.stringify(RUSSIAN_TEMPLATE_TABLES));
+  data[0][0][0]=`ერთის მხრივ, ${F(ln)} პ/ნ ${F(li)} შემდგომში წოდებული, როგორც „გამქირავებელი“, და, მეორე მხრივ, ${F(tn)} (პ/ნ ${F(ti)}) შემდგომში წოდებული, როგორც „დამქირავებელი“, ვდებთ წინამდებარე ხელშეკრულებას`;
+  data[0][0][1]=`С одной стороны ${F(lnr)} (л.н ${F(li)}) (далее именуемый «Арендодатель»), а с другой стороны ${F(tnr)} (л.н ${F(ti)}), именуемый в дальнейшем «Арендатор».`;
+  data[2][1][0]=`1.2 ქირავნობით გადასაცემი ობიექტი არის უძრავი ქონება მდებარე მისამართზე: ${F(addr)} საკადასტრო კოდი: ${F(cad)}.`;
+  data[2][1][1]=`1.2 Предметом аренды является недвижимое имущество, расположенное по адресу: ${F(addrr)}. Кадастровый код: ${F(cad)}.`;
+  data[3][0][0]=`2.1 ყოველთვიური ქირის ოდენობა შეადგენს ${F(rent)} (${F(rentKa)}) ${F(curKa)}, საქართველოს ეროვნული ბანკის მიერ გადახდის დღისათვის დადგენილი ოფიციალური გაცვლითი კურსის მიხედვით.`;
+  data[3][0][1]=`2.1 Ежемесячная арендная плата составляет ${F(rent)} (${F(rentRu)}) ${F(curRu)} по официальному курсу Национального банка Грузии на дату оплаты.`;
+  data[3][1][0]=`2.2 ქირის გადახდა წარმოებს ყოველთვიურად, არაუგვიანეს მიმდინარე თვის ${F(pd)} (${F(pdKa)}) რიცხვისა, ნაღდი ან/და უნაღდო ანგარიშსწორების წესით.`;
+  data[3][1][1]=`2.2 Арендная плата уплачивается ежемесячно не позднее ${F(pd)} (${F(pdRu)}) числа каждого текущего месяца наличным и/или безналичным способом.`;
+  data[8][0][0]=`6.1 წინამდებარე ხელშეკრულება იდება ${F(dur)} (${F(durKa)}) თვის ვადით და მოქმედებს ${F(end)}-მდე;`;
+  data[8][0][1]=`6.1 Текущий Договор заключен на ${F(dur)} (${F(durRu)}) месяцев и действует до ${F(end)};`;
+  let h=`<div class="geo-contact">ტელ: 555440554<br>ელ. ფოსტა: geogreenagency@gmail.com</div>`;
+  h+=`<table class="doc-title-table"><tr><td>ქ.თბილისი / Тбилиси</td><td class="mid">ქირავნობის ხელშეკრულება / Договор Аренды</td><td class="right">${date}</td></tr></table>`;
+  const headings=[null,'ვინაიდან: / Поскольку:','1. ხელშეკრულების საგანი / 1. Предмет договора','2. ქირის ოდენობა და გადახდის წესი / 2. Размер арендной платы и порядок оплаты','3.1 „გამქირავებელი“ ვალდებულია / 3.1 «Арендодатель» обязан','3.2 „დამქირავებელი“ ვალდებულია / 3.2 «Арендатор» обязан','4. ქონების სარგებლობაში გადაცემისა და დაბრუნების წესი / 4. Правила передачи и возврата имущества','5. მხარეთა პასუხისმგებლობა და პასუხისმგებლობისგან გათავისუფლება / 5. Ответственность сторон и освобождение от ответственности','6. ხელშეკრულების მოქმედების ვადა და შეწყვეტა / 6. Срок действия и расторжение договора','6.3 ხელშეკრულების შეწყვეტა / 6.3 Прекращение действия соглашения','7. დავების გადაწყვეტის წესი / 7. Разрешение споров','8. დასკვნითი დებულებები / 8. Заключительные положения'];
+  for(let i=0;i<12;i++){ if(headings[i]) h+=head(headings[i].split(' / ')[0],headings[i].split(' / ').slice(1).join(' / ')); h+=grid(data[i].map(c=>row(c[0],c[1]))); }
+  const la=ph(d.landlordAddress,''), ta=ph(d.tenantAddress,''), lt=ph(d.landlordPhone,''), tt=ph(d.tenantPhone,''), le=ph(d.landlordEmail,''), te=ph(d.tenantEmail,'');
+  h+=head('9. მხარეთა ხელმოწერები','9. Подпись сторон');
+  const signatureLn = ph(d.landlordName, '');
+  const signatureTn = ph(d.tenantName, '');
+  const signatureLnr = signatureLn ? toRussianText(signatureLn) : '';
+  const signatureTnr = signatureTn ? toRussianText(signatureTn) : '';
+  const signatureLandlordDisplay = signatureLn ? dualText(signatureLn, signatureLnr) : '';
+  const signatureTenantDisplay = signatureTn ? dualText(signatureTn, signatureTnr) : '';
+  h+=`<table class="doc-grid"><tr><td><b>გამქირავებელი / Арендодатель</b></td><td><b>დამქირავებელი / Арендатор</b></td></tr><tr><td>${F(signatureLandlordDisplay)}</td><td>${F(signatureTenantDisplay)}</td></tr><tr><td>პ.ნ / И. Н.: ${F(li)}</td><td>პ.ნ / И. Н.: ${F(ti)}</td></tr><tr><td>მის / Адрес: ${F(dualText(la,toRussianText(la)))}</td><td>მის / Адрес: ${F(dualText(ta,toRussianText(ta)))}</td></tr><tr><td>ტელ / тел: ${F(lt)}</td><td>ტელ / тел: ${F(tt)}</td></tr><tr><td>ელ. ფოსტა / Эл. почта: ${F(le)}</td><td>ელ. ფოსტა / Эл. почта: ${F(te)}</td></tr></table>`;
+  h+=`<table class="doc-plainrow" style="margin-top:34px"><tr><td>გამქირავებელი / Арендодатель<br>___________________________</td><td>დამქირავებელი / Арендатор<br>______________________________</td></tr></table>`;
+  return h;
+}
+
+
+
+const DEADLINE_MONTHS = {
+  1:{ka:'იანვარი',en:'January',ru:'января'},2:{ka:'თებერვალი',en:'February',ru:'февраля'},3:{ka:'მარტი',en:'March',ru:'марта'},
+  4:{ka:'აპრილი',en:'April',ru:'апреля'},5:{ka:'მაისი',en:'May',ru:'мая'},6:{ka:'ივნისი',en:'June',ru:'июня'},
+  7:{ka:'ივლისი',en:'July',ru:'июля'},8:{ka:'აგვისტო',en:'August',ru:'августа'},9:{ka:'სექტემბერი',en:'September',ru:'сентября'},
+  10:{ka:'ოქტომბერი',en:'October',ru:'октября'},11:{ka:'ნოემბერი',en:'November',ru:'ноября'},12:{ka:'დეკემბერი',en:'December',ru:'декабря'}
+};
+function parseDeadlineDate(value){
+  const s=(value||'').toString().trim();
+  let m=s.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  if(m) return {d:Number(m[1]),m:Number(m[2]),y:Number(m[3])};
+  m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(m) return {d:Number(m[3]),m:Number(m[2]),y:Number(m[1])};
+  return null;
+}
+const DEADLINE_KA_MONTH_INDEX = Object.fromEntries(Object.entries(DEADLINE_MONTHS).map(([n,v])=>[v.ka,Number(n)]));
+const DEADLINE_KA_MONTH_ALIASES = {
+  'იანვარი':1,'იანვრის':1,'იანვრამდე':1,
+  'თებერვალი':2,'თებერვლის':2,'თებერვლამდე':2,
+  'მარტი':3,'მარტის':3,'მარტამდე':3,
+  'აპრილი':4,'აპრილის':4,'აპრილამდე':4,
+  'მაისი':5,'მაისის':5,'მაისამდე':5,
+  'ივნისი':6,'ივნისის':6,'ივნისამდე':6,
+  'ივლისი':7,'ივლისის':7,'ივლისამდე':7,
+  'აგვისტო':8,'აგვისტოს':8,'აგვისტომდე':8,
+  'სექტემბერი':9,'სექტემბრის':9,'სექტემბრამდე':9,
+  'ოქტომბერი':10,'ოქტომბრის':10,'ოქტომბრამდე':10,
+  'ნოემბერი':11,'ნოემბრის':11,'ნოემბრამდე':11,
+  'დეკემბერი':12,'დეკემბრის':12,'დეკემბრამდე':12
+};
+function parseGeorgianDeadlineDate(value){
+  const s=(value||'').toString().trim().replace(/,/g,' ').replace(/\s+/g,' ');
+  const monthPattern=Object.keys(DEADLINE_KA_MONTH_ALIASES).sort((a,b)=>b.length-a.length).join('|');
+  let m=s.match(new RegExp(`^(\\d{1,2})\\s+(${monthPattern})(?:\\s+(\\d{4}))?$`,'i'));
+  if(m) return {d:Number(m[1]),m:DEADLINE_KA_MONTH_ALIASES[m[2]],y:m[3]?Number(m[3]):null};
+  m=s.match(new RegExp(`^(\\d{4})\\s+წლის\\s+(\\d{1,2})\\s+(${monthPattern})$`,'i'));
+  if(m) return {d:Number(m[2]),m:DEADLINE_KA_MONTH_ALIASES[m[3]],y:Number(m[1])};
+  return null;
+}
+function formatDeadlineTranslations(value){
+  const raw=(value||'').toString().trim();
+  const x=parseDeadlineDate(raw)||parseGeorgianDeadlineDate(raw);
+  if(x && DEADLINE_MONTHS[x.m] && x.d>=1 && x.d<=31){
+    const mo=DEADLINE_MONTHS[x.m];
+    const year=x.y?` ${x.y}`:'';
+    return {ka:raw||`${x.d} ${mo.ka}${year}`,en:`${x.d} ${mo.en}${year}`,ru:`${x.d} ${mo.ru}${year}`};
+  }
+  const exact={
+    'დღეს':{en:'today',ru:'сегодня'},
+    'ხვალ':{en:'tomorrow',ru:'завтра'},
+    'ზეგ':{en:'the day after tomorrow',ru:'послезавтра'},
+    'ერთი კვირის განმავლობაში':{en:'within one week',ru:'в течение одной недели'},
+    'ორი კვირის განმავლობაში':{en:'within two weeks',ru:'в течение двух недель'},
+    'ერთი თვის განმავლობაში':{en:'within one month',ru:'в течение одного месяца'}
+  };
+  if(exact[raw]) return {ka:raw,en:exact[raw].en,ru:exact[raw].ru};
+  return {ka:raw,en:raw,ru:raw};
+}
+function syncDeadlineTranslations(){
+  const ka=document.getElementById('contractDeadline');
+  const en=document.getElementById('contractDeadlineEn');
+  const ru=document.getElementById('contractDeadlineRu');
+  if(!ka||!en||!ru) return;
+  const tr=formatDeadlineTranslations(ka.value);
+  en.value=tr.en||'';
+  ru.value=tr.ru||'';
+}
+
+function depositCommon(d){
+  const date=fmtSlash(d.contractDate);
+  const issuer=normalizeNameSides(d.tenantName,'_______________________');
+  const receiver=normalizeNameSides(d.landlordName,'_______________________');
+  const issuerId=ph(d.tenantId,'________________');
+  const receiverId=ph(d.landlordId,'________________');
+  const addr=normalizeAddressSides(d.propertyAddress,'________________________________________');
+  const cadastral=ph(d.cadastralCode,'____________________________');
+  const amount=ph(d.rentAmount,'_______');
+  const num=Number(d.rentAmount)||0;
+  const wordsKa=d.rentAmount?kaWords(num):'__________';
+  const wordsEn=d.rentAmount?enWords(num):'__________';
+  const wordsRu=d.rentAmount?ruWords(num):'__________';
+  const curKa=CUR_KA[d.currency]||'დოლარს';
+  const curEn=CUR_EN[d.currency]||'USD';
+  const curRu=RU_CUR[d.currency]||'долларов США';
+  const rawKa=(d.contractDeadline||'').toString().trim();
+  const auto=formatDeadlineTranslations(rawKa);
+  const deadline={
+    ka: rawKa || '________________________',
+    en: auto.en || '________________________',
+    ru: auto.ru || '________________________'
+  };
+  const F=x=>`<span class="fill">${x}</span>`;
+  return {date,issuer,receiver,issuerId,receiverId,addr,cadastral,amount,wordsKa,wordsEn,wordsRu,curKa,curEn,curRu,deadline,F};
+}
+
+function depositSignatureGrid(d, lang){
+  const c=depositCommon(d), F=c.F;
+  const leftName=lang==='ru'?c.issuer.ru:c.issuer.en;
+  const rightName=lang==='ru'?c.receiver.ru:c.receiver.en;
+  const leftAddr=normalizeAddressSides(d.tenantAddress,'');
+  const rightAddr=normalizeAddressSides(d.landlordAddress,'');
+  const suffix=lang==='ru'?{issuer:'Давший задаток',receiver:'Получатель задатка',id:'Л.н',addr:'Адрес',tel:'тел',email:'Эл. почта'}:{issuer:'The issuer',receiver:'The receiver',id:'ID.N',addr:'Adr',tel:'Tel',email:'e-mail'};
+  const la=lang==='ru'?leftAddr.ru:leftAddr.en, ra=lang==='ru'?rightAddr.ru:rightAddr.en;
+  return `<table class="doc-grid"><tr><td><b>ბეს გამცემი / ${suffix.issuer}</b></td><td><b>ბეს მიმღები / ${suffix.receiver}</b></td></tr>
+  <tr><td>${F(dualText(c.issuer.ka,leftName))}</td><td>${F(dualText(c.receiver.ka,rightName))}</td></tr>
+  <tr><td>პ.ნ / ${suffix.id}: ${F(c.issuerId)}</td><td>პ.ნ / ${suffix.id}: ${F(c.receiverId)}</td></tr>
+  <tr><td>მის: / ${suffix.addr}: ${F(dualText(leftAddr.ka,la))}</td><td>მის: / ${suffix.addr}: ${F(dualText(rightAddr.ka,ra))}</td></tr>
+  <tr><td>ტელ / ${suffix.tel}: ${F(ph(d.tenantPhone,''))}</td><td>ტელ / ${suffix.tel}: ${F(ph(d.landlordPhone,''))}</td></tr>
+  <tr><td>ელ. ფოსტა / ${suffix.email}: ${F(ph(d.tenantEmail,''))}</td><td>ელ. ფოსტა / ${suffix.email}: ${F(ph(d.landlordEmail,''))}</td></tr></table>`;
+}
+
+function buildDepositBilingualBody(d){
+  const c=depositCommon(d),F=c.F; let h='';
+  h+=`<table class="doc-title-table"><tr><td>ქ.თბილისი / Tbilisi</td><td class="mid">ბეს გადაცემის ხელშეკრულება / Down Payment Transfer Agreement</td><td class="right">${c.date}</td></tr></table>`;
+  h+=grid([row(`წინამდებარე ხელშეკრულება იდება შემდეგ მხარეებს შორის: ერთის მხრივ ${F(c.issuer.ka)} (პ/ნ ${F(c.issuerId)}) (შემდგომში „ბეს გამცემი“), და მეორეს მხრივ ${F(c.receiver.ka)} (პ/ნ ${F(c.receiverId)}) (შემდგომში „ბეს მიმღები“). თითოეული წოდებული როგორც „მხარე“, ხოლო ერთად როგორც „მხარეები“. მხარეები გეგმავენ ქირავნობის ხელშეკრულების დადებას და აფორმებენ წინამდებარე ბეს გადაცემის ხელშეკრულებას საქართველოს კანონმდებლობით გათვალისწინებული წესით.`, `This agreement is concluded between the following parties: on the one hand ${F(c.issuer.en)} (ID/n ${F(c.issuerId)}) (hereinafter “the issuer”), and on the other hand ${F(c.receiver.en)} (ID/n ${F(c.receiverId)}) (hereinafter “the receiver”). Each is referred to as a “Party” and together as the “Parties”. The Parties plan to enter into a rental agreement and conclude this down payment transfer agreement under Georgian law.`)]);
+  h+=head('1. ხელშეკრულების საგანი','1. Subject of the Agreement');
+  h+=grid([
+    row(`1.1. ბეს გამცემი ბეს მიმღებს გადასცემს ბეს სახით ${F(c.amount)} (${F(c.wordsKa)}) ${F(c.curKa)} ეროვნულ ვალუტაში, რითაც მხარეები ადასტურებენ, რომ მე-2 მუხლით დადგენილი პირობების შესრულების შემთხვევაში დადებენ უძრავი ქონების ქირავნობის ხელშეკრულებას.`,`1.1. The issuer transfers to the receiver a down payment of ${F(c.amount)} (${F(c.wordsEn)}) ${F(c.curEn)} in national currency. The Parties confirm that, subject to Article 2, they will enter into a real estate rental agreement.`),
+    row('1.2. ხელშეკრულების 1.1 პუნქტით ბეს სახით გადაცემული თანხა ჩაითვლება უძრავი ქონების ქირავნობის ხელშეკრულებით გათვალისწინებული ქირის/გადასახდელის ანგარიშში.','1.2. The amount transferred as a down payment under Clause 1.1 will be credited toward the rent/payment under the real estate rental agreement.'),
+    row('1.3. ქირავნობის ხელშეკრულების საგანია ბეს გამცემის მიერ ბეს მიმღებისაგან უძრავი ქონების დროებით სარგებლობაში მიღება; ქონების მახასიათებლები, გადახდის წესი და სხვა პირობები განისაზღვრება ქირავნობის ხელშეკრულებით.','1.3. The rental agreement concerns temporary use of the real estate by the issuer from the receiver; its characteristics, payment procedure, and other terms will be set out in the rental agreement.'),
+    row(`1.4. უძრავი ქონება მდებარეობს მისამართზე: ${F(c.addr.ka)}, საკადასტრო კოდი: ${F(c.cadastral)}.`,`1.4. The real estate is located at: ${F(c.addr.en)}, cadastral code: ${F(c.cadastral)}.`)
+  ]);
+  h+=head('2. ხელშეკრულების დადების წინაპირობა','2. Prerequisite for concluding the contract');
+  h+=grid([row(`2.1. ბეს გამცემი კისრულობს ვალდებულებას დადოს ქირავნობის ხელშეკრულება ბეს მიმღებთან არაუგვიანეს ${F(c.deadline.ka)}, წინააღმდეგ შემთხვევაში მის მიერ გადახდილი თანხა უკან არ დაბრუნდება.`,`2.1. The issuer undertakes to conclude the rental agreement with the receiver no later than ${F(c.deadline.en)}; otherwise the amount paid will not be refunded.`)]);
+  h+=head('3. მხარის მიერ ვალდებულების დარღვევა','3. Breach of obligation by a Party');
+  h+=grid([row('3.1. თუ ბეს გამცემი უარს იტყვის ქირავნობის ხელშეკრულების დადებაზე, ბეს სახით გადაცემული თანხა დარჩება ბეს მიმღებს.','3.1. If the issuer refuses to enter into the rental agreement, the down payment remains with the receiver.'),row('3.2. თუ ბეს მიმღები უარს იტყვის ქირავნობის ხელშეკრულების დადებაზე, იგი ვალდებულია მიღებული ბე დაუბრუნოს ბეს გამცემს ორმაგი ოდენობით.','3.2. If the receiver refuses to enter into the rental agreement, the receiver must return the down payment to the issuer in double the amount.')]);
+  h+=head('4. ბეს გადაცემის და დაბრუნების წესი','4. Transfer and return of the down payment');
+  h+=grid([row(`4.1. ხელშეკრულების დადების დღეს ბეს გამცემი ნაღდი ან/და უნაღდო ანგარიშსწორებით გადაუხდის ბეს მიმღებს ${F(c.amount)} (${F(c.wordsKa)}) ${F(c.curKa)} ეროვნულ ვალუტაში.`,`4.1. On the signing date, the issuer shall pay the receiver ${F(c.amount)} (${F(c.wordsEn)}) ${F(c.curEn)} in national currency by cash and/or bank transfer, according to the official exchange rate of the National Bank of Georgia on the payment date.`)]);
+  h+=head('5. მხარეთა პასუხისმგებლობა და პასუხისმგებლობისგან გათავისუფლება','5. Liability and release from liability');
+  h+=grid([row('5.1. მხარეებს ეკისრებათ პასუხისმგებლობა ვალდებულებების შეუსრულებლობის ან არაჯეროვანი შესრულებისათვის ამ ხელშეკრულებისა და მოქმედი კანონმდებლობის შესაბამისად.','5.1. The Parties are liable for non-performance or improper performance under this Agreement and applicable law.'),row('5.2. მხარეები თავისუფლდებიან პასუხისმგებლობისგან, თუ ვალდებულების დარღვევა გამოწვეულია დაუძლეველი ძალით (ფორს-მაჟორი) ან ისეთი გარემოებით, რომლის გათვალისწინება და თავიდან აცილება მათ ძალებს აღემატებოდა.','5.2. The Parties are released from liability where a breach is caused by force majeure or circumstances beyond their reasonable ability to foresee and prevent.')]);
+  h+=head('6. ზოგადი დებულებები','6. General Provisions');
+  h+=grid([
+    row('6.1. ხელშეკრულება შედგენილია ქართულ და ინგლისურ ენებზე 2 (ორი) იდენტურ ეგზემპლარად და გადაეცემა მხარეებს.','6.1. The Agreement is drawn up in Georgian and English in two identical copies, one for each Party.'),
+    row('6.2. ხელშეკრულება ძალაში შედის ხელმოწერის მომენტიდან და მოქმედებს მხარეთა ვალდებულებების სრულ და ჯეროვან შესრულებამდე.','6.2. The Agreement enters into force upon signature and remains valid until full and proper performance of the Parties’ obligations.'),
+    row('6.3. ხელშეკრულებიდან ან მასთან დაკავშირებით წარმოშობილი ნებისმიერი დავა პირველ რიგში გადაწყდება მოლაპარაკებით.','6.3. Any dispute arising out of or in connection with this Agreement shall first be settled by negotiation.'),
+    row('6.4. თუ მოლაპარაკება შედეგს არ გამოიღებს, დავა გადაეცემა საქართველოს სასამართლოს საქართველოს კანონმდებლობის შესაბამისად.','6.4. If negotiations fail, the dispute shall be submitted to the courts of Georgia under Georgian law.'),
+    row('6.5. რომელიმე დებულების ბათილობა არ იწვევს ხელშეკრულების დანარჩენი დებულებების ბათილობას.','6.5. The invalidity of any provision does not affect the validity of the remaining provisions.'),
+    row('6.6. ხელშეკრულებით გაუთვალისწინებელი საკითხები წყდება საქართველოს კანონმდებლობის შესაბამისად.','6.6. Matters not regulated by this Agreement are governed by Georgian law.'),
+    row('6.7. ხელშეკრულებასთან დაკავშირებული შეტყობინება უნდა განხორციელდეს წერილობით, ხელშეკრულებაში მითითებული საკომუნიკაციო საშუალებებით ან სხვა დასადასტურებელი ფორმით.','6.7. Any notice relating to this Agreement must be made in writing using the communication details specified herein or another verifiable method.')
+  ]);
+  h+=head('7. მხარეთა რეკვიზიტები','7. Details of the Parties'); h+=depositSignatureGrid(d,'en'); return h;
+}
+
+function buildDepositRussianBody(d){
+  const c=depositCommon(d),F=c.F; let h='';
+  h+=`<table class="doc-title-table"><tr><td>ქ.თბილისი / Тбилиси</td><td class="mid">ბეს გადაცემის ხელშეკრულება / Договор о задатке</td><td class="right">${c.date}</td></tr></table>`;
+  h+=grid([row(`წინამდებარე ხელშეკრულება იდება შემდეგ მხარეებს შორის: ერთის მხრივ ${F(c.issuer.ka)} (პ/ნ ${F(c.issuerId)}) (შემდგომში „ბეს გამცემი“), და მეორეს მხრივ ${F(c.receiver.ka)} (პ/ნ ${F(c.receiverId)}) (შემდგომში „ბეს მიმღები“). თითოეული წოდებული როგორც „მხარე“, ხოლო ერთად როგორც „მხარეები“. მხარეები გეგმავენ ქირავნობის ხელშეკრულების დადებას და აფორმებენ წინამდებარე ბეს ხელშეკრულებას.`,`Настоящий договор заключен между следующими сторонами: с одной стороны ${F(c.issuer.ru)} (л.н. ${F(c.issuerId)}) (далее «Давший задаток»), а с другой стороны ${F(c.receiver.ru)} (л.н. ${F(c.receiverId)}) (далее «Получатель задатка»). Каждая именуется «Сторона», а вместе — «Стороны». Стороны планируют заключить договор аренды и подписывают настоящий договор о задатке.`)]);
+  const rows=[
+  ['1. ხელშეკრულების საგანი','1. Предмет договора'],
+  [`1.1. ბეს გამცემი ბეს მიმღებს გადასცემს ბეს სახით ${F(c.amount)} (${F(c.wordsKa)}) ${F(c.curKa)} ეროვნულ ვალუტაში, რითაც მხარეები ადასტურებენ, რომ მე-2 მუხლის პირობების შესრულების შემთხვევაში დადებენ ქირავნობის ხელშეკრულებას.`,`1.1. Давший задаток передает Получателю задатка ${F(c.amount)} (${F(c.wordsRu)}) ${F(c.curRu)} в национальной валюте. Стороны подтверждают, что при выполнении условий статьи 2 заключат договор аренды недвижимости.`],
+  ['1.2. 1.1 პუნქტით ბეს სახით გადაცემული თანხა ჩაითვლება ქირავნობის ხელშეკრულებით გათვალისწინებული ქირის/გადასახდელის ანგარიშში.','1.2. Сумма, переданная в качестве задатка по пункту 1.1, засчитывается в счет арендной платы/платежа по договору аренды недвижимости.'],
+  ['1.3. ქირავნობის ხელშეკრულების საგანია უძრავი ქონების დროებით სარგებლობაში მიღება; მახასიათებლები, გადახდის წესი და პირობები განისაზღვრება ქირავნობის ხელშეკრულებით.','1.3. Предметом договора аренды является временное пользование недвижимостью; характеристики, порядок оплаты и условия будут определены договором аренды.'],
+  [`1.4. უძრავი ქონება მდებარეობს მისამართზე: ${F(c.addr.ka)}, საკადასტრო კოდი: ${F(c.cadastral)}.`,`1.4. Недвижимость находится по адресу: ${F(c.addr.ru)}, кадастровый код: ${F(c.cadastral)}.`],
+  ['2. ხელშეკრულების დადების წინაპირობა','2. Предпосылка заключения договора'],
+  [`2.1. ბეს გამცემი ვალდებულია დადოს ქირავნობის ხელშეკრულება ბეს მიმღებთან არაუგვიანეს ${F(c.deadline.ka)}, წინააღმდეგ შემთხვევაში გადახდილი თანხა უკან არ დაბრუნდება.`,`2.1. Давший задаток обязан заключить договор аренды с Получателем задатка не позднее ${F(c.deadline.ru)}; в противном случае уплаченная сумма возврату не подлежит.`],
+  ['3. მხარის მიერ ვალდებულების დარღვევა','3. Нарушение обязательства Стороной'],
+  ['3.1. თუ ბეს გამცემი უარს იტყვის ქირავნობის ხელშეკრულების დადებაზე, გადაცემული თანხა დარჩება ბეს მიმღებს.','3.1. Если Давший задаток откажется заключить договор аренды, сумма задатка остается у Получателя задатка.'],
+  ['3.2. თუ ბეს მიმღები უარს იტყვის ქირავნობის ხელშეკრულების დადებაზე, იგი ვალდებულია მიღებული თანხა დაუბრუნოს ბეს გამცემს ორმაგი ოდენობით.','3.2. Если Получатель задатка откажется заключить договор аренды, он обязан вернуть задаток Давшему задаток в двойном размере.'],
+  ['4. ბეს გადაცემის და დაბრუნების წესი','4. Порядок передачи и возврата задатка'],
+  [`4.1. ხელშეკრულების დადების დღეს ბეს გამცემი ნაღდი ან/და უნაღდო ანგარიშსწორებით გადაუხდის ბეს მიმღებს ${F(c.amount)} (${F(c.wordsKa)}) ${F(c.curKa)} ეროვნულ ვალუტაში.`,`4.1. В день подписания договора Давший задаток уплачивает Получателю задатка ${F(c.amount)} (${F(c.wordsRu)}) ${F(c.curRu)} в национальной валюте наличным и/или безналичным способом.`],
+  ['5. მხარეთა პასუხისმგებლობა და პასუხისმგებლობისგან გათავისუფლება','5. Ответственность и освобождение от ответственности'],
+  ['5.1. მხარეები პასუხს აგებენ ვალდებულებების შეუსრულებლობის ან არაჯეროვანი შესრულებისათვის ხელშეკრულებისა და მოქმედი კანონმდებლობის შესაბამისად.','5.1. Стороны несут ответственность за неисполнение или ненадлежащее исполнение обязательств по настоящему договору и применимому законодательству.'],
+  ['5.2. მხარეები თავისუფლდებიან პასუხისმგებლობისგან, თუ დარღვევა გამოწვეულია ფორს-მაჟორით ან ისეთი გარემოებით, რომლის გათვალისწინება და თავიდან აცილება მათ ძალებს აღემატებოდა.','5.2. Стороны освобождаются от ответственности, если нарушение вызвано форс-мажором или обстоятельствами, которые они не могли разумно предвидеть и предотвратить.'],
+  ['6. ზოგადი დებულებები','6. Общие положения'],
+  ['6.1. ხელშეკრულება შედგენილია ქართულ და რუსულ ენებზე 2 (ორი) იდენტურ ეგზემპლარად და გადაეცემა მხარეებს.','6.1. Договор составлен на грузинском и русском языках в двух идентичных экземплярах и передается Сторонам.'],
+  ['6.2. ხელშეკრულება ძალაში შედის ხელმოწერის მომენტიდან და მოქმედებს ვალდებულებების სრულ შესრულებამდე.','6.2. Договор вступает в силу с момента подписания и действует до полного и надлежащего исполнения обязательств.'],
+  ['6.3. ნებისმიერი დავა პირველ რიგში გადაწყდება მოლაპარაკების გზით.','6.3. Любой спор прежде всего разрешается путем переговоров.'],
+  ['6.4. მოლაპარაკების უშედეგობის შემთხვევაში დავა გადაეცემა საქართველოს სასამართლოს საქართველოს კანონმდებლობის შესაბამისად.','6.4. Если переговоры не дадут результата, спор передается в суд Грузии в соответствии с законодательством Грузии.'],
+  ['6.5. რომელიმე დებულების ბათილობა არ მოქმედებს დანარჩენი დებულებების ნამდვილობაზე.','6.5. Недействительность одного положения не влияет на действительность остальных положений.'],
+  ['6.6. გაუთვალისწინებელი საკითხები წყდება საქართველოს კანონმდებლობის შესაბამისად.','6.6. Вопросы, не урегулированные договором, разрешаются в соответствии с законодательством Грузии.'],
+  ['6.7. შეტყობინებები ხორციელდება წერილობით, მითითებული საკომუნიკაციო საშუალებებით ან სხვა დასადასტურებელი ფორმით.','6.7. Уведомления осуществляются письменно по указанным средствам связи или иным способом, позволяющим подтвердить получение.']];
+  for(let i=0;i<rows.length;i++){const [ka,ru]=rows[i]; if(/^\d+\. [^0-9]/.test(ka)) h+=head(ka,ru); else h+=grid([row(ka,ru)]);}
+  h+=head('7. მხარეთა რეკვიზიტები','7. Реквизиты сторон'); h+=depositSignatureGrid(d,'ru'); return h;
+}
+
+function buildDepositGeorgianBody(d){
+  const c=depositCommon(d),F=c.F; let h='';
+  h+=`<div class="geo-contact">ტელ: 555440554<br>ელ. ფოსტა: geogreenagency@gmail.com</div><div class="geo-title"><div>ქ. თბილისი</div><div class="center">ბეს გადაცემის ხელშეკრულება</div><div class="right">${c.date}</div></div>`;
+  const clauses=[
+  `წინამდებარე ხელშეკრულება იდება შემდეგ მხარეებს შორის: ერთის მხრივ ${F(c.issuer.ka)} (პ/ნ ${F(c.issuerId)}) (შემდგომში „ბეს გამცემი“), და მეორეს მხრივ ${F(c.receiver.ka)} (პ/ნ ${F(c.receiverId)}) (შემდგომში „ბეს მიმღები“). თითოეული წოდებული როგორც „მხარე“, ხოლო ერთად როგორც „მხარეები“. მხარეები გეგმავენ ქირავნობის ხელშეკრულების დადებას და აფორმებენ წინამდებარე ბეს გადაცემის ხელშეკრულებას საქართველოს კანონმდებლობით გათვალისწინებული წესით.`,
+  '1. ხელშეკრულების საგანი',
+  `1.1. ბეს გამცემი ბეს მიმღებს გადასცემს ბეს სახით ${F(c.amount)} (${F(c.wordsKa)}) ${F(c.curKa)} ეროვნულ ვალუტაში, რითაც მხარეები ადასტურებენ, რომ მე-2 მუხლით დადგენილი პირობების შესრულების შემთხვევაში დადებენ უძრავი ქონების ქირავნობის ხელშეკრულებას.`,
+  '1.2. ხელშეკრულების 1.1 პუნქტით ბეს სახით გადაცემული თანხა ჩაითვლება ქირავნობის ხელშეკრულებით გათვალისწინებული ქირის/გადასახდელის ანგარიშში.',
+  '1.3. ქირავნობის ხელშეკრულების საგანია ბეს გამცემის მიერ ბეს მიმღებისაგან უძრავი ქონების დროებით სარგებლობაში მიღება; ქონების მახასიათებლები, გადახდის წესი და პირობები განისაზღვრება ქირავნობის ხელშეკრულებით.',
+  `1.4. უძრავი ქონება მდებარეობს მისამართზე: ${F(c.addr.ka)}, საკადასტრო კოდი: ${F(c.cadastral)}.`,
+  '2. ხელშეკრულების დადების წინაპირობა',
+  `2.1. ბეს გამცემი ვალდებულია დადოს ქირავნობის ხელშეკრულება ბეს მიმღებთან არაუგვიანეს ${F(c.deadline.ka)}, წინააღმდეგ შემთხვევაში მის მიერ გადახდილი თანხა უკან არ დაბრუნდება.`,
+  '3. მხარის მიერ ვალდებულების დარღვევა',
+  '3.1. თუ ბეს გამცემი უარს იტყვის ქირავნობის ხელშეკრულების დადებაზე, ბეს სახით გადაცემული თანხა დარჩება ბეს მიმღებს.',
+  '3.2. თუ ბეს მიმღები უარს იტყვის ქირავნობის ხელშეკრულების დადებაზე, იგი ვალდებულია მიღებული თანხა დაუბრუნოს ბეს გამცემს ორმაგი ოდენობით.',
+  '4. ბეს გადაცემის და დაბრუნების წესი',
+  `4.1. ხელშეკრულების დადების დღეს ბეს გამცემი ნაღდი ან/და უნაღდო ანგარიშსწორებით გადაუხდის ბეს მიმღებს ${F(c.amount)} (${F(c.wordsKa)}) ${F(c.curKa)} ეროვნულ ვალუტაში.`,
+  '5. მხარეთა პასუხისმგებლობა და პასუხისმგებლობისგან გათავისუფლება',
+  '5.1. მხარეებს ეკისრებათ პასუხისმგებლობა ვალდებულებების შეუსრულებლობის ან არაჯეროვანი შესრულებისათვის ამ ხელშეკრულებისა და მოქმედი კანონმდებლობის შესაბამისად.',
+  '5.2. მხარეები თავისუფლდებიან პასუხისმგებლობისგან, თუ დარღვევა გამოწვეულია დაუძლეველი ძალით (ფორს-მაჟორი) ან ისეთი გარემოებით, რომლის გათვალისწინება და თავიდან აცილება მათ ძალებს აღემატებოდა.',
+  '6. ზოგადი დებულებები',
+  '6.1. ხელშეკრულება შედგენილია ქართულ ენაზე 2 (ორი) იდენტურ ეგზემპლარად და გადაეცემა მხარეებს.',
+  '6.2. ხელშეკრულება ძალაში შედის მხარეთა მიერ ხელმოწერის მომენტიდან და მოქმედებს ვალდებულებების სრულ და ჯეროვან შესრულებამდე.',
+  '6.3. ხელშეკრულებიდან ან მასთან დაკავშირებით წარმოშობილი ნებისმიერი დავა პირველ რიგში გადაწყდება მოლაპარაკების გზით.',
+  '6.4. თუ მოლაპარაკება შედეგს არ გამოიღებს, დავა გადაეცემა საქართველოს სასამართლოს საქართველოს კანონმდებლობის შესაბამისად.',
+  '6.5. რომელიმე მუხლის ბათილობა არ მოქმედებს ხელშეკრულების დანარჩენი მუხლების ნამდვილობაზე.',
+  '6.6. ხელშეკრულებით გაუთვალისწინებელი საკითხები წყდება საქართველოს კანონმდებლობის შესაბამისად.',
+  '6.7. ხელშეკრულებასთან დაკავშირებული შეტყობინება უნდა განხორციელდეს წერილობით, მითითებული საკომუნიკაციო საშუალებებით ან სხვა დასადასტურებელი ფორმით.'
+  ];
+  clauses.forEach(t=>{if(/^\d+\. [^0-9]/.test(t))h+=geoSection(t);else h+=singleGrid([singleRow(t)])});
+  const ta=normalizeAddressSides(d.tenantAddress,''),la=normalizeAddressSides(d.landlordAddress,'');
+  h+=geoSection('7. მხარეთა რეკვიზიტები');
+  h+=`<table class="doc-grid"><tr><td><b>ბეს გამცემი</b></td><td><b>ბეს მიმღები</b></td></tr><tr><td>${F(c.issuer.ka)}</td><td>${F(c.receiver.ka)}</td></tr><tr><td>პ.ნ: ${F(c.issuerId)}</td><td>პ.ნ: ${F(c.receiverId)}</td></tr><tr><td>მის: ${F(ta.ka)}</td><td>მის: ${F(la.ka)}</td></tr><tr><td>ტელ: ${F(ph(d.tenantPhone,''))}</td><td>ტელ: ${F(ph(d.landlordPhone,''))}</td></tr><tr><td>ელ. ფოსტა: ${F(ph(d.tenantEmail,''))}</td><td>ელ. ფოსტა: ${F(ph(d.landlordEmail,''))}</td></tr></table>`;
+  return h;
+}
+
+function buildSelectedBody(d){
+  if(d.contractCategory === 'deposit'){
+    if(d.documentType === 'georgian') return buildDepositGeorgianBody(d);
+    if(d.documentType === 'georgianRussian') return buildDepositRussianBody(d);
+    return buildDepositBilingualBody(d);
+  }
+  if(d.documentType === 'georgian') return buildGeorgianBody(d);
+  if(d.documentType === 'georgianRussian') return buildGeorgianRussianBody(d);
+  return buildBody(d);
+}
+
+function buildBody(d){
+  const date = fmtSlash(d.contractDate);
+  const landlordNameSide = normalizeNameSides(d.landlordName, '___________________');
+  const landlordName = landlordNameSide.ka;
+  const landlordNameEn = landlordNameSide.en;
+  const landlordId = ph(d.landlordId, '______________');
+  const tenantNameSide = normalizeNameSides(d.tenantName, '__________________');
+  const tenantName = tenantNameSide.ka;
+  const tenantNameEn = tenantNameSide.en;
+  const tenantId = ph(d.tenantId, '_____________');
+  const propertyAddressSide = normalizeAddressSides(d.propertyAddress, '_________________________________');
+  const address = propertyAddressSide.ka;
+  const addressEn = propertyAddressSide.en;
+  const cadastral = ph(d.cadastralCode, '___________________');
+
+  const rentAmt = ph(d.rentAmount, '____');
+  const rentAmtNum = Number(d.rentAmount)||0;
+  const rentWordsKa = d.rentAmount ? kaWords(rentAmtNum) : '________';
+  const rentWordsEn = d.rentAmount ? enWords(rentAmtNum) : '___________';
+  const curKa = CUR_KA[d.currency] || 'დოლარს';
+  const curEn = CUR_EN[d.currency] || 'USD';
+
+  const payDay = d.paymentDay || 20;
+  const payDayWordKa = d.paymentDay ? (DAY_WORDS[payDay]||'') : '__________';
+  const payDayWordEn = d.paymentDay ? enWords(Number(payDay)) : '___________';
+  const payDayEn = d.paymentDay ? `${payDay}${ordinalSuffix(Number(payDay))}` : '___';
+
+  const duration = ph(d.durationMonths, '_____');
+  const durationWordsKa = d.durationMonths ? kaWords(Number(d.durationMonths)) : '________';
+  const durationWordsEn = d.durationMonths ? enWords(Number(d.durationMonths)) : '___________';
+  const endDate = d.contractDate && d.durationMonths ? fmtSlash(addMonthsISO(d.contractDate, d.durationMonths)) : '______';
+
+  const landlordAddressSide = normalizeAddressSides(d.landlordAddress, '');
+  const tenantAddressSide = normalizeAddressSides(d.tenantAddress, '');
+  const la = landlordAddressSide.ka, laEn = landlordAddressSide.en, lt = ph(d.landlordPhone,''), le = ph(d.landlordEmail,'');
+  const ta = tenantAddressSide.ka, taEn = tenantAddressSide.en, tt = ph(d.tenantPhone,''), te = ph(d.tenantEmail,'');
+  const F = s => `<span class="fill">${s}</span>`;
+
+  let html = '';
+
+  html += `<table class="doc-title-table"><tr>
+    <td>ქ.თბილისი / Tbilisi</td>
+    <td class="mid">ქირავნობის ხელშეკრულება / Contract of Tenancy</td>
+    <td class="right">${date}</td>
+  </tr></table>`;
+
+  // Party intro (TABLE1 — 1 row)
+  html += grid([ row(
+    `ერთის მხრივ, ${F(landlordName)} პ/ნ ${F(landlordId)} შემდგომში წოდებული, როგორც „გამქირავებელი“, და, მეორე მხრივ, ${F(tenantName)}(პ/ნ ${F(tenantId)}) შემდგომში წოდებული, როგორც „დამქირავებელი“, ვდებთ წინამდებარე ხელშეკრულებას`,
+    `On the one hand ${F(landlordNameEn)} (ID/n) ${F(landlordId)}) hereinafter referred to as "Landlord", and on the other hand ${F(tenantNameEn)} (ID/n) ${F(tenantId)}) hereinafter referred to as the "Tenant".`
+  )]);
+
+  html += head('ვინაიდან:', 'Whereas:');
+  html += grid([
+    row('ამ ხელშეკრულების გაფორმებით მხარეები ადასტურებენ თავიანთ ნებას, შეთანხმდნენ ამ ხელშეკრულებით გათვალისწინებულ პირობებზე, ხელი მოაწერონ წინამდებარე ხელშეკრულებას და შეასრულონ ამავე ხელშეკრულებით გათვალისწინებული ვალდებულებები;',
+        '• By concluding this Agreement, the Parties confirm their will to agree on the conditions considered in this Agreement, to sign this Agreement, and to comply with the obligations undertaken in this Agreement;'),
+    row('„გამქირავებელი“ თანახმაა, მისი კუთვნილი ფართი ყოველთვიური ქირის სანაცვლოდ, ქირავნობის ფორმით გადასცეს „დამქირავებელს“;',
+        '• The "Landlord" agrees to transfer the property to the "Tenant" in exchange for monthly rent;'),
+    row('ამ ხელშეკრულების გაფორმების მომენტში მხარეები ადასტურებენ, რომ არ არსებობს სხვა ისეთი გარემოებები, რომლებმაც შეიძლება, ხელი შეუშალონ, დააბრკოლონ ან/და შეუძლებელი გახადონ ამ ხელშეკრულების პირობების და ნაკისრი ვალდებულებების შესრულება;',
+        '• At the time of signing this Contract, the Parties confirm that there are no other circumstances that may prevent, interfere with, and/or make it impossible to fulfill the terms and conditions of this Agreement;'),
+    row('ამ გარიგებასა და შესაბამის კანონმდებლობაზე დაყრდნობით, აგრეთვე, ორმხრივ დაპირებათა და მხარეთა მიერ მისაღები სარგებლის გათვალისწინებით, წინამდებარე დოკუმენტით მხარეები თანხმდებიან შემდეგ პირობებზე:',
+        '• According to this agreement and the relevant legislation, as well as bilateral promises and benefits received by the Parties, the Parties agree to the following terms:')
+  ]);
+
+  html += head('1.ხელშეკრულების საგანი', '1. The subject of the contract');
+  html += grid([
+    row('1.1 წინამდებარე ხელშეკრულებით „გამქირავებელი“ გადასცემს, ხოლო „დამქირავებელი“ იღებს დროებით სარგებლობაში ამ ხელშეკრულების 1.2. 1.2.1. პუნქტში მითითებულ ქონებას (შემდგომში - ქირავნობის საგანი) „დამქირავებელი“ ვალდებულია, ამ ხელშეკრულებით დადგენილი წესით, ოდენობითა და ვადებში გადაუხადოს „გამქირავებელს“ ყოველთვიური ქირა;',
+        '1.1 With the present contract the "Landlord" transfers to and the "Tenant" receives, in temporary usage, the property defined in article 1.2. 1.2.1. (hereinafter - Subject of the renting/property) of this Contract. On the other hand, the "Tenant" is obliged to pay the monthly rent in the amount and in the timeframe as defined by this Contract;'),
+    row(`1.2 ქირავნობით გადასაცემი ობიექტი არის უძრავი ქონება მდებარე მისამართზე: ${F(address)} საკადასტრო კოდი: ${F(cadastral)}.`,
+        `1.2 The property to be rented is real estate located at: ${F(addressEn)}. Cadastral Code: ${F(cadastral)}.`),
+    row('1.2.1 უძრავ ქონებასთან ერთად დამქირავებელს გადაეცემა ასევე მოძრავი ქონება (ავეჯი და ტექნიკა).',
+        '1.2.1. Together with the real estate, the Landlord will also transfer the movable property (furniture and equipment).'),
+    row('1.3 წინამდებარე ქირავნობის ხელშეკრულების ფარგლებში „დამქირავებელი“ უფლებამოსილია, გამოიყენოს ქირავნობის საგანი მხოლოდ საცხოვრებელი მიზნით;',
+        '1.3 Under the present Contract, the "Tenant" is entitled to use the property only for living purposes;'),
+    row('1.4 დამქირავებელს არ აქვს უფლება გამქირავებლის თანხმობის გარეშე ჩაეწეროს უძრავ ქონებაში;',
+        "1.4 The Tenant has no right to put themselves in the real estate record of the public registry without the landlord's consent;")
+  ]);
+
+  html += head('2.ქირის ოდენობა და გადახდის წესი', '2. The amount of rent and the payment procedure');
+  html += grid([
+    row(`2.1 ყოველთვიური ქირის ოდენობა შეადგენს ${F(rentAmt)}(${F(rentWordsKa)}) ${F(curKa)} საქართველოს ეროვნული ბანკის მიერ გადახდის დღისათვის დადგენილი ოფიციალური გაცვლითი კურსის მიხედვით.`,
+        `2.1 The monthly rent is ${F(rentAmt)} (${F(rentWordsEn+' '+curEn)}) according to the official exchange rate of The National Bank of Georgia on the date of the payment.`),
+    row(`ქირის გადახდა წარმოებს ყოველთვიურად, არაუგვიანეს მიმდინარე თვის ${F(payDay)}(${F(payDayWordKa)}) რიცხვისა ნაღდი ან/და უნაღდო ანგარიშსწორების წესით.`,
+        `The rent shall be paid monthly, no later than the ${F(payDayEn)} (${F(payDayWordEn)}) day of each current month by cash or cashless payment.`),
+    row('„დამქირავებელი“ საკუთარი ხარჯებით იხდის ყველა კომუნალურ თუ სხვა გადასახადს, რომელიც საჭიროა ქირავნობის საგნის ჩვეულებისამებრ გამოსაყენებლად;',
+        'The "Tenant" is obliged to cover all the utility bills at his sole cost. The "Tenant" shall also cover all the expenses related to the normal usage of the property'),
+    row('ხელშეკრულების ხელმოწერისას დამქირავებელი იხდის პირველი და ბოლო თვის ქირას.',
+        'Upon signing the contract, the Tenant pays the rent for the first and the last months.')
+  ]);
+
+  html += head('3. მხარეთა ვალდებულებები', '3. The obligations of the parties');
+  html += plain('3.1 „გამქირავებელი“ ვალდებულია:', '3.1 The "Landlord" is obliged to:');
+  html += grid([
+    row('3.1.1 გადასცეს „დამქირავებელს“ უფლებრივად და ნივთობრივად უნაკლო ნივთი (ქირავნობის საგანი), ამ ხელშეკრულებით დადგენილი წესის, პირობებისა და ვადების დაცვით; მხარეები თანხმდებიან, რომ ხელშეკრულების ხელმოწერის მომენტისათვის ქირავნობის საგნის ნივთობრივი და უფლებრივი მდგომარეობა შეთანხმებულია და გამქირავებლისთვის არავითარი ნაკლის შესახებ არ არის ცნობილი.',
+        '3.1.1 Transfer the subject of rent to the "Tenant" without any material or legal defects, by the procedure, conditions, and terms established by this agreement. The Parties agree, that at the time of concluding this agreement, the material and legal condition of the subject of rent is agreed upon, and no defect is known to the landlord.'),
+    row('3.1.1.1 უფლებრივად უნაკლობა გულისხმობს, რომ ქირავნობის საგანი არ არის ყადაღადადებული, ან სხვაგვარად უფლებრივად დატვირთული და მესამე პირს არ შეიძლება ჰქონდეს რაიმე პრეტენზია დამქირავებლის მიმართ, რამაც ქირავნობის განმავლობაში, შეიძლება საფრთხის ქვეშ დააყენოს დამქირავებლის ამ ხელშეკრულებით მინიჭებული უფლებების გამოყენება.',
+        '3.1.1.1 Free of legal defects means, that the subject of rent is not sequestered, or otherwise loaded and no third person may have any claims against the tenant, which can endanger the exercising of the rights granted to the tenant under this agreement.'),
+    row('3.1.1.2 თუ ქირავნობის ობიექტი აღმოჩნდება ნაკლის მქონე ან დაზიანდება დამქირავებლის ბრალის გარეშე, გამქირავებელი ვალდებულია აღმოფხვრას აღნიშნული ნაკლი დამქირავებლისგან ასეთი მოთხოვნის მიღებისთანავე, ნაკლის აღმოფხვრისთვის დამქირავებლის მიერ განსაზღვრულ ვადაში, რომელიც არ უნდა იყოს 1 (ერთი) კვირაზე ნაკლები. აღნიშნული ვადის უშედეგოდ გასვლის შემდეგ, დამქირავებელი უფლებამოსილია გამქირავებელს გადაუხადოს შემცირებული ქირა (ქირა შემცირდება იმ ოდენობით, რა ოდენობითაც შემცირდა ნივთის ვარგისიანობა ნაკლის გამო) ვიდრე არ იქნება აღმოფხვრილი ქირავნობის საგნის ნაკლი.',
+        "3.1.1.2 If the subject of the rent will turn out to be defective or will be damaged without the tenant's fault, the landlord is obliged to eliminate this defect or damage upon receipt of such a request from the tenant, in the timeframe indicated by the tenant, which must be not less than 1 (one) week. After the expiry of this term, the tenant is entitled to pay the landlord reduced rent (the amount of the rent shall be reduced as proportionate to the amount by which the suitability of the thing is decreased by the defect) until the defect is eliminated."),
+    row('3.1.1.3 თუ ქირავნობის საგნის ნაკლი ან დაზიანება იმდენად მნიშვნელოვანია, რომ დამქირავებელს არ აქვს შესაძლებლობა ჯეროვნად ისარგებლოს ქირავნობის საგნით, იგი უფლებამოსილია შეწყვიტოს წინამდებარე ხელშეკრულება ნაკლის/დაზიანების აღმოფხვრისთვის გამქირავებლისთვის მიცემული ვადის გასვლისთანავე, ან ასეთ ვადის განსაზღვრის გარეშე, თუ ნათელია, რომ ნაკლის აღმოფხვრა შეუძლებელი არის 2 (ორი) კვირის ვადაში.',
+        '3.1.1.3 If the defect of the subject of rent or damage is so paramount, that the tenant does not have the opportunity to use the subject of the rent properly, he is entitled to terminate this contract after the expiry of the term set by them to the landlord for the elimination of defect or damage, or without setting a term if it is clear that elimination is impossible within 2 (two) weeks.'),
+    row('3.1.2 გადასცეს „დამქირავებელს“ ქირავნობის საგანი ისეთ მდგომარეობაში, რომელიც უზრუნველყოფს მის გამოყენებას ამ ხელშეკრულებით განსაზღვრული მიზნისთვის;',
+        '3.1.2 Transfer the property to the "Tenant" in a condition that ensures its usage for the purpose set out in this Agreement;'),
+    row('3.1.3 ქონების გადაცემის მომენტისათვის დაფარული ჰქონდეს ქონებასთან დაკავშირებული ყველა კომუნალური გადასახადი;',
+        '3.1.3 By the time of the transfer of property, have all utility fees related to the property covered;'),
+    row('3.1.4 უზრუნველყოს „დამქირავებელი“ ქირავნობის საგნის დაუბრკოლებელი სარგებლობით და ამგვარი სარგებლობისათვის საჭირო ინფორმაციით, აცნობოს „დამქირავებელს“ უძრავი ქონების ნაკლოვანებების შესახებ, რომელიც „გამქირავებლისათვის“ ხელშეკრულების ხელმოწერამდე იყო ცნობილი ან ცნობილი გახდება ხელმოწერის შემდეგ და რამაც შეიძლება, ხელი შეუშალოს „დამქირავებელს“ ქირავნობის საგნით სარგებლობაში;',
+        '3.1.4 Provide the "Tenant" with uninterrupted usage of the property and information for such use, inform the "Tenant" about the deficiencies on the property, which was known to the "Landlord" before signing the contract or became known after signing, which may impede the "Tenant" to use the property;'),
+    row('3.1.5 დაიცვას წინამდებარე ხელშეკრულებით გათვალისწინებული პირობები;',
+        '3.1.5 Comply with the conditions envisaged by this Agreement'),
+    row('3.1.6 შეასრულოს წინამდებარე ხელშეკრულებით ნაკისრი სხვა ვალდებულებები.',
+        '3.1.6 Fulfill other obligations undertaken by this Agreement.')
+  ]);
+  html += plain('3.2 „დამქირავებელი“ ვალდებულია:', '3.2 The "Tenant" is obliged to:');
+  html += grid([
+    row('3.2.1 დროულად გადაუხადოს „გამქირავებელს“ ქირა იმ ოდენობით და პირობებით, რაც გათვალისწინებულია ამ ხელშეკრულების 2.1. და 2.2 მუხლებით.',
+        '3.2.1 Pay the rent on time in the amount according to the terms specified in paragraph 2.1. and 2.2 of this agreement.'),
+    row('3.2.2 შეინახოს, მოუაროს და დაიცვას ქირავნობის საგანი და ამ ხელშეკრულების დასრულების შემდეგ სათანადო მდგომარეობაში დაუბრუნოს იგი „გამქირავებელს“ ბუნებრივი ცვეთის გათვალისწინებით. უზრუნველყოს უძრავი ქონების მოვლა-პატრონობა, უსაფრთხოებისა და სანიტარულ-ჰიგიენური ნორმების დაცვა, გადაცემული ქონების „დამქირავებლის“ ბრალით გამოწვეული დაზიანების შემთხვევაში, „დამქირავებელი“ ვალდებულია, აანაზღაუროს მიყენებული ზიანი;',
+        '3.2.2 Keep and protect the property and return it to the "Landlord" in the proper condition after the completion of this agreement with the consideration of natural deprivation. Maintain safety and sanitary-hygienic norms, and in the case of damages that are committed at the fault of the "Tenant" he/she has to compensate for the damages;'),
+    row('3.2.3 წინამდებარე ხელშეკრულების მოქმედების ვადის განმავლობაში საკუთარი სახსრებით გადაიხადოს ყველა კომუნალური და ქირავნობის საგნით ნორმალურ სარგებლობასთან დაკავშირებული სხვა სახის გადასახადები;',
+        '3.2.3 During the validity of this contract, pay the Utility payments and all the payments necessary for normal usage of the property, with his own funds;'),
+    row('3.2.4 „გამქირავებლის“ წინასწარი წერილობითი თანხმობის გარეშე არ გადასცეს დაქირავებული ქონება მესამე პირებს ქვექირავნობით;',
+        '3.2.4 Not to transfer the property to third parties by sub-tenancy, without the prior, written consent of the "Landlord";'),
+    row('3.2.5 გამოიყენოს ქირავნობის საგანი მხოლოდ ამ ხელშეკრულებით განსაზღვრულ მიზნით;',
+        '3.2.5 Use the property only for the purposes specified in this agreement.'),
+    row('3.2.6 წინასწარ შეთანხმებულ დროს, დაათვალიეროს ქირავნობის საგანი და შეამოწმოს მისი მდგომარეობა;',
+        '3.2.6 Give the "Landlord" an opportunity to visit and check the condition of the property at a fixed time (which shall be fixed by the parties in advance) no more than once in every two months;'),
+    row('3.2.7 განახორციელოს ამ ხელშეკრულებით და მოქმედი კანონმდებლობით მასზე დაკისრებული სხვა მოვალეობები.',
+        '3.2.7 Carry out other obligations according to this Agreement and the applicable legislation.')
+  ]);
+
+  html += head('4.ქონების სარგებლობაში გადაცემისა და დაბრუნების წესი', '4. The rule of transfer and return of the Property');
+  html += grid([
+    row('4.1 ქონების „დამქირავებლისათვის“ გადაცემის მომენტიდან მისი მოვლის, დაცვისა და შენახვის ვალდებულება გადადის „დამქირავებელზე“;',
+        '4.1 The obligation to maintain, protect and store the property is transferred from the "Landlord" to the "Tenant" from the moment of transfer;')
+  ]);
+
+  html += head('5.მხარეთა პასუხისმგებლობა და პასუხისმგებლობისგან გათავისუფლება', '5. Responsibilities of the Parties and dismissal from responsibility');
+  html += grid([
+    row('5.1 მხარეები ვალდებულნი არიან, აუნაზღაურონ ერთმანეთს ხელშეკრულების შეუსრულებლობით გამოწვეული ზიანი;',
+        '5.1 In the event of damage caused by non-fulfillment or improper fulfillment of obligations, the Parties will stand against each other by the current legislation of Georgia;'),
+    row('5.2 მხარეები პასუხს არ აგებენ ხელშეკრულების შეუსრულებლობისთვის, თუ ეს გამოწვეულია ფორს-მაჟორული გარემოებებით.',
+        '5.2 The Parties shall not be liable for failure to comply with the contract if it is caused by force-majeure circumstances.'),
+    row('5.2.1 ფორს-მაჟორულად ითვლება ისეთი გარემოებები, რომელთა დადგომის პროგნოზირება, თავიდან აცილება და/ან მიმდინარეობაზე ზემოქმედება აღემატება მხარის ძალებს, მათ შორის: სტიქიური უბედურება, საგანგებო ან საომარი მდგომარეობა, ხელისუფლების აქტები, რომლებიც მნიშვნელოვნად აბრკოლებს მხარის მიერ უფლება-მოვალეობათა განხორციელებას და სხვა გარემოებები.',
+        '5.2.1 Circumstances are considered force-majeure if their occurrence, prevention, and/or alteration is beyond the control of the Parties, including but not limited to: natural disasters, states of emergency or war, government acts that significantly hinder the Parties from exercising their rights and obligations.'),
+    row('5.2.2 ფორს-მაჟორული გარემოებების გამო ვალდებულებათა შესრულების შეუძლებლობის შესახებ მხარემ დაუყოვნებლივ უნდა აცნობოს მეორე მხარეს. თუ შეტყობინების გაგზავნა შეუძლებელია, მაშინ იგი უნდა გაიგზავნოს პირველივე შესაძლებლობისთანავე.',
+        '5.2.2 The Party shall immediately notify the other Party about the impossibility of fulfillment of obligations due to Force-Majeure circumstances. If it is impossible to send a message, the parties should send it at the first available opportunity.'),
+    row('5.2.3 ფორს-მაჟორული გარემოებების გამო დასაშვებია ამ ხელშეკრულების პირობების გადახედვა.',
+        '5.2.3 At the time of the Force-Majeure circumstances, it is permissible to review the terms of this Agreement.'),
+    row('5.2.4 იმ შემთხვევაში თუ ფორსმაჟორული გარემოების ხანგრძლივობა 30 (ოცდაათი) დღეზე მეტ ხანს გაგრძელდა ან მისი დადგომისთანავე ცხადი გახდა, რომ მოქმედება 30 (ოცდაათი) დღეზე მეტ ხანს გაგრძელდება, მხარეები წყვეტენ ხელშეკრულების მოქმედების მიზანშეწონილობის საკითხს. მხარეების შეუთანხმებლობის შემთხვევაში, გადაწყვეტილებას შეწყვეტის შესახებ, იღებს მხარე, რომლის მიმართაც ჯეროვნად არ სრულდება ვალდებულება. ხელშეკრულების ამგვარი შეწყვეტის დროს მხარეები შეძლებისდაგვარად გონივრულ ვადებში ასწორებენ ყველა ადრე არსებულ ვალდებულებებს ერთმანეთის მიმართ.',
+        '5.2.4 If the duration of force-majeure has lasted for more than 30 (thirty) days or it has become clear upon its commencement, that it will continue for more than 30 (thirty) days, the Parties decide on the expediency of termination of the contract. In case of disagreement between the parties, the decision on termination of the contract is made by the party to whom obligations are not performed properly. In the event of such disruption of the contract, the Parties shall correct all the existing obligations to each other in reasonable terms.')
+  ]);
+
+  html += head('6.ხელშეკრულების მოქმედების ვადა და შეწყვეტა', '6. Term of validity and Termination of the Agreement');
+  html += grid([
+    row(`6.1 წინამდებარე ხელშეკრულება იდება ${F(duration)}(${F(durationWordsKa)}) კალენდარული თვის ვადით და მოქმედებს ${F(endDate)} მდე;`,
+        `6.1 This Agreement shall be concluded for ${F(duration)}(${F(durationWordsEn)}) calendar month(s) and is valid until ${F(endDate)};`),
+    row('6.2 ხელშეკრულების ვადის გასვლის შემდეგ ხელშეკრულება გაგრძელდება, ორივე მხარის თანხმობის შემთხვევაში;',
+        '6.2 After the expiration of the contract term, it may be extended if both parties agree to the extension;')
+  ]);
+  html += plain('6.3 ხელშეკრულების შეწყვეტა', '6.3 Termination of the Agreement');
+  html += grid([
+    row('6.3.1 ხელშეკრულება შეწყვეტილად ითვლება მისი ვადის ამოწურვისთანავე 6.1. პუნქტით გათვალისწინებული პირობის დაცვით;',
+        '6.3.1 The contract shall be terminated upon the expiration of the term, taking into consideration paragraph 6.1;'),
+    row('6.3.2 ხელშეკრულება შეიძლება, შეწყდეს მხარეთა ურთიერთშეთანხმების საფუძველზე ნებისმიერ დროს;',
+        '6.3.2 The contract may be terminated at any time on the basis of mutual agreement between the parties;'),
+    row('6.3.3 ხელშეკრულების ცალმხრივად მოშლა დასაშვებია ერთ-ერთი მხარის მიერ, თუ ხელშეკრულების მეორე მხარე არსებითად არღვევს ამ ხელშეკრულებით შეთანხმებულ პირობებს და გაფრთხილების მიუხედავად გონივრულ ვადაში ვერ უზრუნველყოფს ხელშეკრულებით ნაკისრი ვალდებულებების შესრულებას. ასევე საქართველოს კანონმდებლობით გათვალისწინებულ სხვა შემთხვევებში;',
+        '6.3.3 Unilateral disruption of the agreement is permissible by one of the Parties, if the other Contracting Party is violating this Agreement despite the warnings of the second party or does not fulfill the obligations undertaken by the Agreement in a reasonable time. This agreement may also be terminated in other cases defined by the legislation of Georgia;'),
+    row('6.3.4 მხარეები თანხმდებიან, რომ დამქირავებლის მიერ ქირის გადახდის 10 (ათი) კალენდარული დღის გადაცილების შემთხვევაში გამქირავებელს უფლება აქვს ცალმხრივად შეწყვიტოს წინამდებარე ხელშეკრულება;',
+        '6.3.4 The Parties agree that in case of 10 (ten) calendar days overdue on rent payment by the lessee, the lessor has the right to unilaterally terminate this agreement;'),
+    row('6.3.5 წინამდებარე ხელშეკრულების 1.4 პუნქტის დარღვევის შემთხვევაში გამქირავებელი უფლებამოსილია ცალმხრივად შეწყვიტოს წინამდებარე ხელშეკრულება;',
+        '6.3.5 In case of the violation of paragraph 1.4 of this agreement, the lessor is entitled to unilaterally terminate this agreement;'),
+    row('6.3.6 დამქირავებელს უფლება აქვს, მოშალოს ხელშეკრულება გამქირავებლის 30 (ოცდაათი) კალენდარული დღით ადრე გაფრთხილების შემთხვევაში. დამქირავებელი კარგავს წინასწარ გადახდილ ბოლო თვის ქირას.',
+        '6.3.6 The lessee has the right to cancel the contract if the lessor is notified 30 (thirty) calendar days in advance. The tenant loses the last month rent paid in advance.'),
+    row('6.3.7 გამქირავებელს უფლება აქვს მოშალოს ხელშეკრულება დამქირავებლის 30 (ოცდაათი) კალენდარული დღით ადრე გაფრთხილების შემთხვევაში. გამქირავებელი ვალდებულია უკან დააბრუნოს წინასწარ გადახდილი ბოლო თვის ქირა.',
+        "6.3.7 The lessor has the right to terminate the contract if the lessee is notified 30 (thirty) calendar days in advance. The landlord is obliged to return the last month's rent paid in advance.")
+  ]);
+
+  html += head('7. დავების გადაწყვეტის წესი', '7. Dispute Resolution');
+  html += grid([
+    row('7.1 ნებისმიერი დავა, რომელიც წარმოიშობა ამ ხელშეკრულებიდან ან ამ ხელშეკრულებასთან კავშირში, მათ შორის ნებისმიერი კითხვა მისი არსებობის, კანონიერების ან/და განმარტების შემთხვევაში უნდა გადაწყდეს მოლაპარაკების გზით.',
+        '7.1 Any dispute arising out of this Agreement or in connection with this Agreement, including any question regarding its existence, legality, interpretation, execution, breach, or termination shall be resolved through negotiation.'),
+    row('7.2 თუ მოლაპარაკებას აზრი არ აქვს ან თუ მოლაპარაკებამ შედეგი არ გამოიღო, მხარეთა შორის წარმოშობილ დავას გადაწყვეტს საქართველოს სასამართლო ქართული კანონმდებლობის შესაბამისად.',
+        '7.2 If the negotiation does not make sense or if the negotiations do not yield results, the dispute arising between the parties will be decided by the Georgian court in accordance with Georgian legislation.'),
+    row('7.3 მხარეთა შეთანხმებით, პირველი ინსტანციის სასამართლოს მიერ ნებისმიერი მხარის სასარგებლოდ მიღებული გადაწყვეტილება ექვემდებარება დაუყოვნებლივ აღსრულებას.',
+        '7.3 By agreement of the parties, the decision in favor of either side made by the Court of First Instance, shall be subject to immediate enforcement for execution.')
+  ]);
+
+  html += head('8. დასკვნითი დებულებები', '8. Final provisions');
+  html += grid([
+    row('8.1 ხელშეკრულება შედგენილია ქართულ და ინგლისურ ენაზე ორ თანაბარი ძალის მქონე სამ ეგზემპლარად, რომელთაგან თითოეული გადაეცემა მხარეებს, ხოლო ერთი ეგზემპლარი გადაეცემა აგენტს.',
+        '8.1 The contract is drawn up in Georgian and English languages in three copies of equal force, each of which is given to the parties, and one copy is given to the agent.'),
+    row('8.2 ნებისმიერი ცვლილების შეტანა ხელშეკრულებაში ხდება მხარეთა წერილობითი შეთანხმების საფუძველზე;',
+        '8.2 Any kinds of changes in this Agreement have to be agreed upon by the parties in written form. Any amendments to this contract shall be considered as a part of this contract;'),
+    row('8.3 მხარეები ვალდებულნი არიან რეკვიზიტების შეცვლის თაობაზე ერთმანეთს აცნობონ ცვლილებიდან 15 (თხუთმეტი) კალენდარული დღის ვადაში;',
+        '8.3 The parties must inform each-other within 15 (fifteen) days about any requisite changes;'),
+    row('8.4 ხელშეკრულების რომელიმე პუნქტის ბათილობა არ იწვევს მთლიანი ხელშეკრულების ბათილობას;',
+        '8.4 Invalidity of any of the terms of the contract does not cause the invalidation of the entire contract;'),
+    row('8.5 ხელშეკრულება, მისი ნებისმიერი დანართი, ცვლილება ან დამატება (ასეთის არსებობის შემთხვევაში) წარმოადგენს ერთიან ხელშეკრულებას და სრულად გამოხატავს მხარეთა ნებას;',
+        '8.5 The Agreement, any of its attachments, amendments, changes, or additions (in case of existence) constitute a single agreement and fully express the will of the Parties;'),
+    row('8.6 მხარეები ადასტურებენ, რომ ისინი წინასწარ გაეცნენ ხელშეკრულებას მათ სრულად ესმით ამ ხელშეკრულების შინაარსი.',
+        '8.6 Parties declare that they are fully entitled to sign this contract and undertake the obligations, described in this contract.')
+  ]);
+
+  html += head('9.მხარეთა ხელმოწერები', '9. Signatures of the parties');
+  html += grid([
+    row('გამქირავებელი/ Landlord', 'დამქირავებელი/ Tenant'),
+    row(`პ.ნ/ ID/N: ${landlordId}`, `პ/ნ / ID/N: ${tenantId}`),
+    row(`მის/ Adr: ${dualText(la, laEn)}`, `მის/ Adr: ${dualText(ta, taEn)}`),
+    row(`ტელ/ Tel: ${lt}`, `ტელ/ Tel: ${tt}`),
+    row(`ელ. ფოსტა/ E-mail: ${le}`, `ელ. ფოსტა/ E-mail: ${te}`)
+  ]);
+
+  html += `<table class="doc-plainrow" style="margin-top:34px;"><tr><td class="ka">გამქირავებელი/ Landlord</td><td class="en" style="text-align:left;">დამქირავებელი/ Tenant</td></tr></table>`;
+  html += `<table class="doc-plainrow"><tr><td class="ka">_______________________</td><td class="en" style="text-align:left;">_______________________</td></tr></table>`;
+
+  return html;
+}
+
+function render(){ document.getElementById('sheet').innerHTML = buildSelectedBody(getData()); }
+ids.forEach(id=>{
+  document.getElementById(id).addEventListener('input', render);
+  document.getElementById(id).addEventListener('change', render);
+});
+document.getElementById('contractDate').value = new Date().toISOString().slice(0,10);
+render();
+
+// ---------- DOWNLOAD AS WORD (PC + iOS FIX) ----------
+function makeWordHtml(d){
+  const bodyHtml = buildSelectedBody(d);
+  return `
+  <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+  <head><meta charset="utf-8"><title>ხელშეკრულება</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    @page Section1{size:8.5in 11.0in; margin:0.5in 0.5in 0.5in 0.5in;}
+    div.Section1{page:Section1;}
+    body{font-family:Sylfaen, Georgia, serif; font-size:10pt; line-height:1.3; color:#1a1a1a;}
+    .doc-title-table{width:100%;border-collapse:collapse;margin-bottom:10pt;}
+    .doc-title-table td{border:none;padding:0;font-weight:bold;}
+    .doc-title-table td.mid{text-align:center;}
+    .doc-title-table td.right{text-align:right;}
+    .doc-head{width:100%;border-collapse:collapse;margin:10pt 0 0;}
+    .doc-head td{border:none;padding:0;font-weight:bold;width:50%;}
+    .doc-head td.en{text-align:right;}
+    .doc-plainrow{width:100%;border-collapse:collapse;margin:14pt 0 2pt;}
+    .doc-plainrow td{border:none;padding:0;width:50%;}
+    .doc-plainrow td.en{text-align:right;}
+    .doc-grid{width:100%;border-collapse:collapse;margin:3pt 0 5pt;border:1px solid #000;}
+    .doc-grid td{border:1px solid #000;padding:4pt 6pt;vertical-align:top;width:50%;}
+    .doc-grid td p{margin:0;text-align:left;}
+    .fill{font-weight:bold;}
+    .doc-grid.single td{width:100%;}
+    .geo-contact{font-size:8.5pt;line-height:1.25;margin-bottom:5pt;}
+    .geo-title{display:table;width:100%;font-weight:bold;margin-bottom:10pt;}
+    .geo-title>div{display:table-cell;width:33.33%;}
+    .geo-title .center{text-align:center;} .geo-title .right{text-align:right;}
+    .geo-section{font-weight:bold;text-align:center;margin:10pt 0 4pt;}
+  </style></head>
+  <body><div class="Section1">${bodyHtml}</div></body></html>`;
+}
+
+function makeFileName(d){
+  const base = (d.tenantName || d.landlordName || 'contract')
+    .toString()
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, '')
+    .replace(/\s+/g, '_') || 'contract';
+  const kind=d.contractCategory==='deposit'?'ბეს':'ქირავნობის'; const prefix = d.documentType === 'georgian' ? `ქართული_${kind}_ხელშეკრულება` : d.documentType === 'georgianRussian' ? `ქარ_რუს_${kind}_ხელშეკრულება` : `ქარ_ინგ_${kind}_ხელშეკრულება`;
+  return `${prefix}_${base}.doc`;
+}
+
+function setDownloadStatus(text, ok=true){
+  const btn = document.getElementById('downloadBtn');
+  if(!btn) return;
+  const old = btn.dataset.defaultText || btn.textContent;
+  btn.dataset.defaultText = old;
+  btn.textContent = text;
+  btn.style.borderColor = ok ? 'rgba(34,197,94,.85)' : 'rgba(248,113,113,.85)';
+  setTimeout(()=>{
+    btn.textContent = btn.dataset.defaultText || '⬇ Download Word';
+    btn.style.borderColor = '';
+  }, 1800);
+}
+
+function isIOSDevice(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function showManualDownload(fileName, blob, htmlText){
+  const box = document.getElementById('iosDownloadBox');
+  const link = document.getElementById('manualDownloadLink');
+  const title = document.getElementById('iosDownloadTitle');
+  const help = document.getElementById('iosDownloadHelp');
+  const copyBtn = document.getElementById('copyWordHtmlBtn');
+  if(!box || !link) return;
+
+  // Show the box BEFORE creating any URL. Some iPhone viewers block blob URLs, but the user must still see feedback.
+  box.hidden = false;
+  if(title) title.textContent = 'Word file is ready';
+  if(help) help.textContent = 'Tap the green link below. If it opens preview: Share → Save to Files / Open in Word. Best: open this HTML in Safari.';
+  link.textContent = 'Tap here to save Word file';
+  link.download = fileName;
+  link.setAttribute('target', '_blank');
+  link.setAttribute('rel', 'noopener');
+
+  if(copyBtn){
+    copyBtn.onclick = async function(ev){
+      if(ev) ev.preventDefault();
+      try{
+        await navigator.clipboard.writeText(htmlText || '');
+        copyBtn.textContent = '✅ Copied';
+      }catch(e){
+        copyBtn.textContent = 'Copy blocked';
+      }
+      setTimeout(()=>copyBtn.textContent='Copy Word HTML', 1600);
+      return false;
+    };
+  }
+
+  if(link.dataset.blobUrl){
+    try{ URL.revokeObjectURL(link.dataset.blobUrl); }catch(e){}
+    delete link.dataset.blobUrl;
+  }
+
+  try{
+    const url = URL.createObjectURL(blob);
+    link.dataset.blobUrl = url;
+    link.href = url;
+    return url;
+  }catch(err){
+    // Stronger iOS fallback: data URL. Slower, but works in more local-file viewers.
+    try{
+      const reader = new FileReader();
+      reader.onload = function(){ link.href = reader.result; };
+      reader.onerror = function(){ if(help) help.textContent = 'This iPhone viewer blocked file creation. Open the HTML in Safari.'; };
+      reader.readAsDataURL(blob);
+    }catch(e){
+      if(help) help.textContent = 'This iPhone viewer blocked file creation. Open the HTML in Safari.';
+    }
+  }
+}
+
+function forceAnchorDownload(fileName, blob){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.style.position = 'fixed';
+  a.style.left = '-9999px';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{
+    try{ document.body.removeChild(a); }catch(e){}
+    try{ URL.revokeObjectURL(url); }catch(e){}
+  }, 8000);
+}
+
+async function exportWordFile(e){
+  if(e && e.preventDefault) e.preventDefault();
+  if(e && e.stopPropagation) e.stopPropagation();
+  const now = Date.now();
+  if(window.__lastExportTap && now - window.__lastExportTap < 700) return false;
+  window.__lastExportTap = now;
+
+  const d = getData();
+  const fileName = makeFileName(d);
+  const html = '\ufeff' + makeWordHtml(d);
+  const blob = new Blob([html], {type:'application/msword'});
+  const isiOS = isIOSDevice();
+
+  // Always create a visible backup link first. So even if iPhone blocks auto-download, user sees a link.
+  showManualDownload(fileName, blob, html);
+
+  // iOS Safari best option: share sheet. It only works from a real tap, so no delays before this.
+  if(isiOS){
+    try{
+      const file = new File([blob], fileName, {type:'application/msword'});
+      if(navigator.canShare && navigator.canShare({files:[file]}) && navigator.share){
+        await navigator.share({files:[file], title:fileName, text:'Word contract'});
+        setDownloadStatus('✅ Share opened', true);
+        return false;
+      }
+    }catch(err){}
+  }
+
+  // PC / Android / some Safari versions.
+  try{
+    forceAnchorDownload(fileName, blob);
+    setDownloadStatus(isiOS ? '✅ Tap green link below' : '✅ Download started', true);
+  }catch(err){
+    setDownloadStatus('✅ Tap green link below', true);
+  }
+  return false;
+}
+
+const downloadBtn = document.getElementById('downloadBtn');
+if(downloadBtn){
+  downloadBtn.type = 'button';
+  downloadBtn.onclick = exportWordFile;
+  downloadBtn.addEventListener('pointerup', exportWordFile, {passive:false});
+}
+
+// ---------- SAVE / LOAD ----------
+const STORAGE_PREFIX = 'contract2:';
+
+function canUseLocalStorage(){
+  try{
+    const testKey = STORAGE_PREFIX + '__test__';
+    localStorage.setItem(testKey, '1');
+    localStorage.removeItem(testKey);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+const useLocalStorage = canUseLocalStorage();
+
+async function storageList(){
+  if(useLocalStorage){
+    return Object.keys(localStorage).filter(k => k.startsWith(STORAGE_PREFIX));
+  }
+  if(window.storage && window.storage.list){
+    const res = await window.storage.list(STORAGE_PREFIX);
+    return (res && res.keys) || [];
+  }
+  return [];
+}
+
+async function storageGet(key){
+  if(useLocalStorage){
+    return localStorage.getItem(key);
+  }
+  if(window.storage && window.storage.get){
+    const r = await window.storage.get(key, false);
+    return r && r.value;
+  }
+  return null;
+}
+
+async function storageSet(key, value){
+  if(useLocalStorage){
+    localStorage.setItem(key, value);
+    return true;
+  }
+  if(window.storage && window.storage.set){
+    await window.storage.set(key, value, false);
+    return true;
+  }
+  return false;
+}
+
+async function storageDelete(key){
+  if(useLocalStorage){
+    localStorage.removeItem(key);
+    return true;
+  }
+  if(window.storage && window.storage.delete){
+    await window.storage.delete(key, false);
+    return true;
+  }
+  return false;
+}
+
+function showSaveStatus(text, ok=true){
+  const btn = document.getElementById('saveBtn');
+  const old = btn.dataset.defaultText || btn.textContent;
+  btn.dataset.defaultText = old;
+  btn.textContent = text;
+  btn.style.borderColor = ok ? 'rgba(34,197,94,.75)' : 'rgba(248,113,113,.75)';
+  setTimeout(()=>{
+    btn.textContent = btn.dataset.defaultText;
+    btn.style.borderColor = '';
+  }, 1400);
+}
+
+async function refreshSavedList(){
+  const listEl = document.getElementById('savedList');
+  try{
+    const keys = await storageList();
+    if(!keys.length){
+      listEl.innerHTML = '<span class="saved-empty">ჯერ არაფერია შენახული</span>';
+      return;
+    }
+
+    const items = await Promise.all(keys.map(async k=>{
+      try{
+        const value = await storageGet(k);
+        return value ? {key:k, data: JSON.parse(value)} : null;
+      }catch(e){
+        return null;
+      }
+    }));
+
+    listEl.innerHTML='';
+    items.filter(Boolean).sort((a,b)=>(b.data.savedAt||0)-(a.data.savedAt||0)).forEach(item=>{
+      const row=document.createElement('div');
+      row.className='saved-item';
+
+      const title=document.createElement('span');
+      title.textContent = `${item.data.contractCategory === 'deposit' ? 'ბე' : 'ქირავნობა'} · ${item.data.documentType === 'georgian' ? 'ქართული' : item.data.documentType === 'georgianRussian' ? 'ქარ/რუს' : 'ქარ/ინგ'} · ${item.data.tenantName || 'უცნობი'} — ${item.data.propertyAddress || ''}`;
+
+      const wrap=document.createElement('span');
+      wrap.style.display='flex';
+      wrap.style.gap='4px';
+      wrap.style.flexShrink='0';
+
+      const loadBtn=document.createElement('button');
+      loadBtn.className='load';
+      loadBtn.type='button';
+      loadBtn.textContent='ჩატვირთვა';
+      loadBtn.onclick=()=>{
+        ids.forEach(id=>{
+          if(item.data[id] !== undefined) document.getElementById(id).value = item.data[id];
+        });
+        render();
+      };
+
+      const delBtn=document.createElement('button');
+      delBtn.className='del';
+      delBtn.type='button';
+      delBtn.textContent='წაშლა';
+      delBtn.onclick=async()=>{
+        await storageDelete(item.key);
+        refreshSavedList();
+      };
+
+      wrap.appendChild(loadBtn);
+      wrap.appendChild(delBtn);
+      row.appendChild(title);
+      row.appendChild(wrap);
+      listEl.appendChild(row);
+    });
+  }catch(e){
+    listEl.innerHTML = '<span class="saved-empty">ჩატვირთვა ვერ მოხერხდა</span>';
+  }
+}
+
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  const d=getData();
+  d.savedAt=Date.now();
+  const key = `${STORAGE_PREFIX}${d.savedAt}`;
+  try{
+    const ok = await storageSet(key, JSON.stringify(d));
+    if(!ok) throw new Error('No storage available');
+    await refreshSavedList();
+    showSaveStatus('✅ შენახულია / Saved', true);
+  }catch(e){
+    showSaveStatus('❌ ვერ შეინახა / Not saved', false);
+    alert('შენახვა ვერ მოხერხდა. სცადე ფაილის გახსნა Chrome-ში ან სხვა ბრაუზერში.');
+  }
+});
+refreshSavedList();
+
+
+
+// ---------- iPHONE SAFE PDF / PRINT ----------
+(function(){
+  const pdfBtn = document.getElementById('iosPdfBtn');
+  if(pdfBtn){
+    pdfBtn.addEventListener('click', function(e){
+      e.preventDefault();
+      render();
+      setTimeout(function(){ window.print(); }, 100);
+    }, {passive:false});
+  }
+})();
+
+
+{
+  const el=document.getElementById('contractDeadline');
+  if(el){
+    const updateDeadline=()=>{syncDeadlineTranslations(); render();};
+    el.addEventListener('input',updateDeadline);
+    el.addEventListener('change',updateDeadline);
+    el.addEventListener('blur',updateDeadline);
+  }
+}
+
+</script>
+
+
+<style id="geogreen-final-fixes">
+  .preview-pane{position:relative;align-items:flex-start;}
+  .document-toolbar{position:static;top:auto;z-index:auto;display:flex;flex-wrap:wrap;gap:8px;align-items:center;width:min(1020px,100%);margin:0 auto 12px;padding:10px;background:rgba(23,35,29,.94);border:1px solid rgba(255,255,255,.15);border-radius:16px;box-shadow:0 12px 28px rgba(15,23,42,.18);backdrop-filter:blur(10px)}
+  .document-toolbar button{width:auto!important;min-height:40px!important;padding:0 14px!important;border-radius:11px!important;font-size:12px!important;white-space:nowrap!important}
+  .document-toolbar .edit-main{background:linear-gradient(135deg,#22c55e,#15803d);color:#fff}
+  .document-toolbar .edit-save{background:#fff;color:#14532d}
+  .document-toolbar .edit-cancel,.document-toolbar .edit-reset{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.16)}
+  .document-toolbar .edit-status{margin-left:auto;color:#d1fae5;font-size:12px;font-weight:700}
+  .preview-stack{width:100%;min-width:0;display:flex;flex-direction:column;align-items:center}
+  .sheet[contenteditable="true"]{outline:4px solid rgba(34,197,94,.28);box-shadow:0 0 0 1px #22c55e,0 18px 44px rgba(15,23,42,.15);cursor:text}
+  .sheet[contenteditable="true"] td,.sheet[contenteditable="true"] p,.sheet[contenteditable="true"] div{cursor:text}
+  .sheet[contenteditable="true"]:focus{outline:4px solid rgba(34,197,94,.36)}
+  .edit-note{font-size:11px;color:#cbd5e1;flex-basis:100%;line-height:1.35}
+  @media(max-width:920px){.document-toolbar{position:relative;top:auto;width:100%;border-radius:14px}.preview-pane{display:block!important}.sheet{min-width:680px!important}.document-toolbar .edit-status{width:100%;margin-left:0}}
+  @media(max-width:560px){.document-toolbar button{flex:1 1 calc(50% - 4px)!important}.document-toolbar{padding:8px}.preview-pane{overflow-x:auto!important}.sheet{padding:36px 30px!important}}
+  @media print{.document-toolbar{display:none!important}.preview-stack{display:block!important}}
+
+  /* Form alignment: wrapped labels no longer shift adjacent controls. */
+  fieldset .row.two>div>label{min-height:34px!important;display:flex!important;align-items:flex-end!important;}
+  #contractCategory,#documentType,#currency{height:48px!important;}
+  #depositDeadlineWrap input{height:48px!important;}
+  .deposit-deadline-row{margin-top:14px!important;padding-top:14px;border-top:1px solid rgba(255,255,255,.14);}
+  .deposit-deadline-row label{font-weight:800!important;}
+  .deadline-help{margin-top:7px;font-size:11px;line-height:1.4;color:var(--panel-dim);}
+
+  /* Clear action */
+  .btn-clear{
+    background:linear-gradient(135deg,rgba(248,113,113,.20),rgba(127,29,29,.26));
+    border:1px solid rgba(252,165,165,.34);
+    color:#fff;
+    margin-bottom:8px;
+    box-shadow:0 10px 24px rgba(15,23,42,.12);
+  }
+  .btn-clear:hover{
+    background:linear-gradient(135deg,rgba(248,113,113,.30),rgba(127,29,29,.34));
+    border-color:rgba(252,165,165,.62);
+    box-shadow:0 14px 30px rgba(127,29,29,.20);
+  }
+
+  /* Polished entrance and interaction motion */
+  @keyframes appReveal{from{opacity:0;transform:scale(.988)}to{opacity:1;transform:scale(1)}}
+  @keyframes panelReveal{from{opacity:0;transform:translateX(-22px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes previewReveal{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes cardReveal{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes splashPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(34,197,94,.34)}50%{transform:scale(1.08);box-shadow:0 0 0 16px rgba(34,197,94,0)}}
+  @keyframes splashOut{to{opacity:0;visibility:hidden;transform:scale(1.025)}}
+  body.geogreen-ready .app{animation:appReveal .55s cubic-bezier(.2,.8,.2,1) both}
+  body.geogreen-ready .form-pane{animation:panelReveal .62s cubic-bezier(.2,.8,.2,1) both}
+  body.geogreen-ready .preview-stack{animation:previewReveal .65s .10s cubic-bezier(.2,.8,.2,1) both}
+  body.geogreen-ready .form-pane fieldset,
+  body.geogreen-ready .actions{animation:cardReveal .48s cubic-bezier(.2,.8,.2,1) both}
+  body.geogreen-ready .form-pane fieldset:nth-of-type(1){animation-delay:.08s}
+  body.geogreen-ready .form-pane fieldset:nth-of-type(2){animation-delay:.12s}
+  body.geogreen-ready .form-pane fieldset:nth-of-type(3){animation-delay:.16s}
+  body.geogreen-ready .form-pane fieldset:nth-of-type(4){animation-delay:.20s}
+  body.geogreen-ready .form-pane fieldset:nth-of-type(5){animation-delay:.24s}
+  body.geogreen-ready .actions{animation-delay:.28s}
+  .form-pane fieldset,.actions,.document-toolbar,.sheet{will-change:transform,opacity}
+  .actions button{transition:filter .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease!important}
+  .actions button:hover{filter:brightness(1.06)}
+  input,select{transition:border-color .18s ease,box-shadow .18s ease,background .18s ease!important}
+  input:focus,select:focus{box-shadow:0 0 0 4px rgba(34,197,94,.17),0 12px 24px rgba(0,0,0,.18)!important}
+
+
+  body.geogreen-loading .app{opacity:0;visibility:hidden;}
+  body.geogreen-ready .app{opacity:1;visibility:visible;transition:opacity .7s cubic-bezier(.16,1,.3,1);}
+  .geogreen-splash{opacity:1;visibility:visible;}
+  .geogreen-splash{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,#254b36 0%,#14251d 48%,#0b1510 100%);transition:opacity .45s ease,visibility .45s ease,transform .45s ease}
+  .geogreen-splash.hide{animation:splashOut .48s ease forwards}
+  .geogreen-splash-card{text-align:center;color:#effff4;padding:34px 40px;border:1px solid rgba(255,255,255,.16);border-radius:28px;background:rgba(255,255,255,.075);box-shadow:0 28px 70px rgba(0,0,0,.34);backdrop-filter:blur(18px)}
+  .geogreen-splash-mark{width:28px;height:28px;margin:0 auto 17px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#dcfce7,#22c55e 45%,#15803d);animation:splashPulse 1.2s ease-in-out infinite}
+  .geogreen-splash-title{font-size:22px;font-weight:900;letter-spacing:.02em}
+  .geogreen-splash-sub{margin-top:7px;font-size:12px;color:#bbd7c4}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+    .geogreen-splash{display:none!important}
+  }
+
+
+
+  /* =========================================================
+     GEOGREEN PREMIUM MOTION LAYER
+     Soft, restrained and responsive. Does not alter document structure.
+  ========================================================= */
+  @keyframes ggAmbientShift{0%,100%{background-position:0% 0%,100% 0%,50% 50%}50%{background-position:7% 5%,93% 8%,52% 48%}}
+  @keyframes ggBrandEnter{0%{opacity:0;transform:translateY(-12px) scale(.975);filter:blur(7px)}100%{opacity:1;transform:none;filter:blur(0)}}
+  @keyframes ggCardEnter{0%{opacity:0;transform:translate3d(0,18px,0) scale(.985);filter:blur(4px)}100%{opacity:1;transform:none;filter:blur(0)}}
+  @keyframes ggSheetEnter{0%{opacity:0;transform:translate3d(0,24px,0) scale(.992);filter:blur(5px)}100%{opacity:1;transform:none;filter:blur(0)}}
+  @keyframes ggGlowDrift{0%,100%{transform:translate3d(0,0,0) scale(1);opacity:.5}50%{transform:translate3d(20px,-25px,0) scale(1.12);opacity:.8}}
+  @keyframes ggButtonSweep{0%{transform:translateX(-145%) skewX(-18deg);opacity:0}20%{opacity:.7}100%{transform:translateX(300%) skewX(-18deg);opacity:0}}
+  @keyframes ggFocusPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.24)}100%{box-shadow:0 0 0 7px rgba(34,197,94,0)}}
+  @keyframes ggToolbarEnter{0%{opacity:0;transform:translateY(-10px) scale(.99)}100%{opacity:1;transform:none}}
+  @keyframes ggSplashCardIn{0%{opacity:0;transform:translateY(22px) scale(.92);filter:blur(12px)}70%{opacity:1;transform:translateY(-2px) scale(1.012);filter:blur(0)}100%{opacity:1;transform:none;filter:blur(0)}}
+  @keyframes ggLogoBloom{0%{opacity:0;transform:scale(.45) rotate(-20deg)}65%{opacity:1;transform:scale(1.09) rotate(3deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+  @keyframes ggLeafA{0%{transform:scale(0) rotate(-55deg)}100%{transform:scale(1) rotate(-27deg)}}
+  @keyframes ggLeafB{0%{transform:scale(0) rotate(55deg)}100%{transform:scale(1) rotate(28deg)}}
+  @keyframes ggLoader{0%{transform:translateX(-100%)}55%,100%{transform:translateX(0)}}
+  @keyframes ggOrbOne{0%,100%{transform:translate(-8%,-4%) scale(1)}50%{transform:translate(8%,7%) scale(1.18)}}
+  @keyframes ggOrbTwo{0%,100%{transform:translate(6%,5%) scale(1.1)}50%{transform:translate(-8%,-6%) scale(.92)}}
+
+  body{background-size:140% 140%,145% 145%,100% 100%!important;animation:ggAmbientShift 16s ease-in-out infinite}
+  .form-pane::before{animation:ggGlowDrift 9s ease-in-out infinite!important}
+  .form-pane::after{animation:ggGlowDrift 11s 1.2s ease-in-out infinite reverse!important}
+  body.geogreen-ready .brand{animation:ggBrandEnter .72s .18s cubic-bezier(.16,1,.3,1) both}
+  body.geogreen-ready .brand-sub{animation:ggBrandEnter .72s .26s cubic-bezier(.16,1,.3,1) both}
+  body.geogreen-ready .form-pane fieldset,body.geogreen-ready .actions{animation-name:ggCardEnter!important;animation-duration:.68s!important;animation-timing-function:cubic-bezier(.16,1,.3,1)!important;animation-fill-mode:both!important}
+  body.geogreen-ready .preview-stack{animation:ggSheetEnter .86s .34s cubic-bezier(.16,1,.3,1) both!important}
+  body.geogreen-ready .document-toolbar{animation:ggToolbarEnter .62s .48s cubic-bezier(.16,1,.3,1) both}
+
+  fieldset{transition:border-color .28s ease,box-shadow .32s ease,background .32s ease!important}
+  fieldset:hover{border-color:rgba(74,222,128,.37)!important;background:linear-gradient(180deg,rgba(255,255,255,.175),rgba(255,255,255,.09))!important;box-shadow:0 18px 38px rgba(3,18,10,.20),inset 0 1px 0 rgba(255,255,255,.08)!important}
+  fieldset:focus-within{border-color:rgba(74,222,128,.76)!important;box-shadow:0 0 0 3px rgba(34,197,94,.10),0 19px 42px rgba(3,18,10,.23)!important}
+  input[type=text],input[type=number],input[type=date],select{transition:border-color .22s ease,box-shadow .26s ease,background .22s ease,filter .22s ease!important}
+  input:hover,select:hover{filter:brightness(1.015)}
+  input:focus,select:focus{animation:ggFocusPulse .55s ease-out}
+
+  .actions button,.document-toolbar button{isolation:isolate;transition:box-shadow .25s ease,filter .22s ease,border-color .22s ease,background .25s ease!important}
+  .actions button::before,.document-toolbar button::before{content:'';position:absolute;z-index:-1;inset:-40% auto -40% -45%;width:28%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent);opacity:0;pointer-events:none}
+  .actions button:hover::before,.document-toolbar button:hover::before{animation:ggButtonSweep .8s ease}
+  .actions button:hover,.document-toolbar button:hover{filter:brightness(1.075) saturate(1.04)!important}
+  .btn-primary:hover{box-shadow:0 18px 38px rgba(34,197,94,.30)!important}
+  .saved-item{transition:border-color .24s ease,background .25s ease,box-shadow .25s ease!important}
+  .saved-item:hover{border-color:rgba(74,222,128,.35)!important;background:linear-gradient(135deg,rgba(255,255,255,.19),rgba(34,197,94,.075))!important}
+  .sheet{transition:box-shadow .35s ease,opacity .28s ease!important}
+  .document-toolbar{transition:border-color .25s ease,box-shadow .28s ease,background .28s ease!important}
+  .document-toolbar:hover{border-color:rgba(74,222,128,.28);box-shadow:0 16px 34px rgba(15,23,42,.22)}
+
+  .geogreen-splash{overflow:hidden;background:radial-gradient(circle at 50% 38%,rgba(74,222,128,.20),transparent 25%),radial-gradient(circle at 18% 15%,rgba(34,197,94,.16),transparent 27%),linear-gradient(145deg,#09150f 0%,#13291d 52%,#0b1d14 100%)!important}
+  .geogreen-splash::before{content:'';position:absolute;inset:0;pointer-events:none;opacity:.32;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:38px 38px;mask-image:radial-gradient(circle at center,#000,transparent 72%)}
+  .geogreen-splash-orb{position:absolute;border-radius:50%;filter:blur(35px);pointer-events:none}
+  .geogreen-splash-orb.orb-one{width:260px;height:260px;left:8%;top:11%;background:rgba(34,197,94,.17);animation:ggOrbOne 5s ease-in-out infinite}
+  .geogreen-splash-orb.orb-two{width:310px;height:310px;right:4%;bottom:2%;background:rgba(134,239,172,.10);animation:ggOrbTwo 6s ease-in-out infinite}
+  .geogreen-splash-card{position:relative;min-width:min(360px,calc(100vw - 40px));padding:40px 44px 34px!important;animation:ggSplashCardIn .92s cubic-bezier(.16,1,.3,1) both;background:linear-gradient(145deg,rgba(255,255,255,.115),rgba(255,255,255,.045))!important;border:1px solid rgba(187,247,208,.22)!important;box-shadow:0 35px 90px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.15)!important}
+  .geogreen-splash-logo{position:relative;width:62px;height:62px;margin:0 auto 18px;animation:ggLogoBloom .82s .18s cubic-bezier(.16,1,.3,1) both}
+  .geogreen-splash-mark{position:absolute;left:19px;top:19px;width:25px!important;height:25px!important;margin:0!important;z-index:3}
+  .geogreen-splash-logo .leaf{position:absolute;top:5px;width:25px;height:39px;border-radius:100% 0 100% 0;background:linear-gradient(145deg,#86efac,#16a34a);transform-origin:bottom center;box-shadow:0 8px 18px rgba(34,197,94,.22)}
+  .geogreen-splash-logo .leaf-a{left:7px;animation:ggLeafA .7s .38s cubic-bezier(.16,1,.3,1) both}
+  .geogreen-splash-logo .leaf-b{right:7px;border-radius:0 100% 0 100%;animation:ggLeafB .7s .46s cubic-bezier(.16,1,.3,1) both}
+  .geogreen-splash-title{font-size:25px!important;letter-spacing:.045em!important;text-shadow:0 5px 22px rgba(0,0,0,.25)}
+  .geogreen-splash-sub{font-size:12.5px!important;letter-spacing:.025em}
+  .geogreen-loader{height:3px;margin:24px auto 0;max-width:190px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.10)}
+  .geogreen-loader span{display:block;width:100%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#16a34a,#86efac,#22c55e);animation:ggLoader 1.25s .18s cubic-bezier(.16,1,.3,1) both}
+  .geogreen-splash.hide{animation:splashOut .68s cubic-bezier(.4,0,.2,1) forwards!important}
+  @media(max-width:560px){.geogreen-splash-card{padding:34px 25px 29px!important}body{animation-duration:22s}}
+  @media(prefers-reduced-motion:reduce){body{animation:none!important}.geogreen-splash-orb,.geogreen-splash-logo,.geogreen-loader span{animation:none!important}}
+
+</style>
+<script id="geogreen-final-fixes-script">
+(function(){
+  'use strict';
+  const fieldIds = ids.filter(id=>id!=='documentType'&&id!=='contractCategory');
+  const typeEl = document.getElementById('documentType');
+  const categoryEl = document.getElementById('contractCategory');
+  const sheetEl = document.getElementById('sheet');
+  const STATES_KEY='geogreen_template_states_v3';
+  const EDITS_KEY='geogreen_template_edits_v3';
+  const DEFAULTS={contractDate:new Date().toISOString().slice(0,10),durationMonths:'12',rentAmount:'800',currency:'USD',paymentDay:'20'};
+  const stateKey=()=>`${categoryEl.value}:${typeEl.value}`;
+  let currentType=stateKey();
+  let templateStates=readJson(STATES_KEY,{});
+  let templateEdits=readJson(EDITS_KEY,{});
+  let editMode=false, editSnapshot='';
+
+  function readJson(key,fallback){try{return JSON.parse(localStorage.getItem(key)||'')||fallback}catch(e){return fallback}}
+  function writeJson(key,val){try{localStorage.setItem(key,JSON.stringify(val))}catch(e){}}
+  function collectFields(){const o={};fieldIds.forEach(id=>{const e=document.getElementById(id);if(e)o[id]=e.value});return o}
+  function saveState(type){templateStates[type]=collectFields();writeJson(STATES_KEY,templateStates)}
+  function loadState(type){const state=templateStates[type]||DEFAULTS;fieldIds.forEach(id=>{const e=document.getElementById(id);if(e)e.value=state[id]!==undefined?state[id]:(DEFAULTS[id]||'')})}
+
+  // Better three-script transliteration for user-entered names and addresses.
+  const RU_TO_GEO_MULTI=[['дж','ჯ'],['дз','ძ'],['шч','შჩ'],['kh','ხ'],['sh','შ'],['ch','ჩ'],['ts','ც'],['zh','ჟ']];
+  const RU_TO_GEO={'а':'ა','б':'ბ','в':'ვ','г':'გ','д':'დ','е':'ე','ё':'იო','ж':'ჟ','з':'ზ','и':'ი','й':'ი','к':'კ','л':'ლ','м':'მ','н':'ნ','о':'ო','п':'პ','р':'რ','с':'ს','т':'ტ','у':'უ','ф':'ფ','х':'ხ','ц':'ც','ч':'ჩ','ш':'შ','щ':'შჩ','ы':'ი','э':'ე','ю':'იუ','я':'ია','ь':'','ъ':''};
+  const GEO_TO_RU=Object.assign({},GEO_RU_MAP,{'ყ':'ყ','ღ':'ღ','წ':'წ','ჭ':'ჭ'});
+  function hasCyr(s){return /[А-Яа-яЁё]/.test(s||'')}
+  function cyrToGeo(text){return (text||'').replace(/[А-Яа-яЁё]+/g,w=>Array.from(w.toLowerCase()).map(c=>RU_TO_GEO[c]??c).join(''))}
+  function geoToRu(text){return Array.from(text||'').map(ch=>GEO_TO_RU[ch]||GEO_TO_RU[ch.toLocaleLowerCase('ka-GE')]||ch).join('').replace(/(^|[\s-])([а-яё])/g,(m,p,c)=>p+c.toUpperCase())}
+  function latinToGeoText(text){return toGeorgianName(text)}
+  function anyToGeo(text){text=(text||'').trim();if(hasGeorgian(text))return toGeorgianName(text);if(hasCyr(text))return cyrToGeo(text);if(hasLatin(text))return latinToGeoText(text);return text}
+  function anyToEnglish(text){text=(text||'').trim();if(hasLatin(text)&&!hasGeorgian(text)&&!hasCyr(text))return titleCaseLatin(text);return toEnglishName(anyToGeo(text))}
+  function anyToRussian(text){text=(text||'').trim();if(hasCyr(text)&&!hasGeorgian(text)&&!hasLatin(text))return text.replace(/(^|[\s-])([а-яё])/g,(m,p,c)=>p+c.toUpperCase());return geoToRu(anyToGeo(text))}
+  const oldToEnglishAddress=toEnglishAddress, oldToGeorgianAddress=toGeorgianAddress;
+  toRussianText=function(value){
+    let s=(value||'').toString().trim();if(!s||/^_+$/.test(s))return s;
+    s=s.replace(/თბილისი/g,'Тбилиси').replace(/საქართველო/g,'Грузия').replace(/ქუჩა|ქ\./g,'ул.').replace(/გამზირი|გამზ\./g,'просп.').replace(/ბინა/g,'кв.').replace(/კორპუსი|კორპ\./g,'корп.').replace(/სართული/g,'этаж');
+    return anyToRussian(s);
+  };
+  normalizeNameSides=function(raw,fallback){const original=ph(raw,fallback);if(/^_+$/.test(original))return{ka:original,en:original};return{ka:anyToGeo(original),en:anyToEnglish(original),ru:anyToRussian(original)}};
+  normalizeAddressSides=function(raw,fallback){const original=ph(raw,fallback);if(!original||/^_+$/.test(original))return{ka:original,en:original,ru:original};let geo=original;if(hasCyr(original))geo=cyrToGeo(original);else if(hasLatin(original)&&!hasGeorgian(original))geo=oldToGeorgianAddress(original);return{ka:geo,en:oldToEnglishAddress(geo),ru:toRussianText(geo)}};
+
+  // Wrap preview so the editor toolbar does not disturb the document dimensions.
+  const preview=sheetEl.parentElement;
+  const stack=document.createElement('div');stack.className='preview-stack';
+  preview.insertBefore(stack,sheetEl);stack.appendChild(sheetEl);
+  const toolbar=document.createElement('div');toolbar.className='document-toolbar';
+  toolbar.innerHTML='<button type="button" class="edit-main" id="editDocumentBtn">✏️ Edit document</button><button type="button" class="edit-save" id="saveDocumentEditBtn" hidden>✓ Save edits</button><button type="button" class="edit-cancel" id="cancelDocumentEditBtn" hidden>Cancel</button><button type="button" class="edit-reset" id="resetDocumentEditBtn">↺ Reset text</button><span class="edit-status" id="editDocumentStatus">Template text locked</span><div class="edit-note">Fill the form first, then press Edit document to add, remove, or change any clause directly in the preview.</div>';
+  stack.insertBefore(toolbar,sheetEl);
+  const editBtn=toolbar.querySelector('#editDocumentBtn'),saveEditBtn=toolbar.querySelector('#saveDocumentEditBtn'),cancelEditBtn=toolbar.querySelector('#cancelDocumentEditBtn'),resetEditBtn=toolbar.querySelector('#resetDocumentEditBtn'),status=toolbar.querySelector('#editDocumentStatus');
+  const clearFormBtn=document.getElementById('clearFormBtn');
+
+  const originalBuildSelectedBody=buildSelectedBody;
+  buildSelectedBody=function(d){const k=`${d.contractCategory||'rental'}:${d.documentType}`;return templateEdits[k]||originalBuildSelectedBody(d)};
+  render=function(){
+    if(editMode)return;
+    sheetEl.innerHTML=buildSelectedBody(getData());
+  };
+  makeWordHtml=(function(original){return function(d){
+    const k=`${d.contractCategory||'rental'}:${d.documentType}`;const bodyHtml=templateEdits[k]||originalBuildSelectedBody(d);
+    const old=buildSelectedBody;buildSelectedBody=()=>bodyHtml;try{return original(d)}finally{buildSelectedBody=old}
+  }})(makeWordHtml);
+
+  function setEditing(on){editMode=on;sheetEl.contentEditable=on?'true':'false';sheetEl.spellcheck=on;editBtn.hidden=on;saveEditBtn.hidden=!on;cancelEditBtn.hidden=!on;status.textContent=on?'Editing this selected document':'Template text locked';if(on){editSnapshot=sheetEl.innerHTML;sheetEl.focus()}}
+  editBtn.onclick=()=>setEditing(true);
+  saveEditBtn.onclick=()=>{templateEdits[currentType]=sheetEl.innerHTML;writeJson(EDITS_KEY,templateEdits);setEditing(false);status.textContent='Custom edits saved';setTimeout(()=>status.textContent='Template text locked',1400)};
+  cancelEditBtn.onclick=()=>{sheetEl.innerHTML=editSnapshot;setEditing(false)};
+  resetEditBtn.onclick=()=>{if(!confirm('Reset all manual text edits for this selected document?'))return;delete templateEdits[currentType];writeJson(EDITS_KEY,templateEdits);setEditing(false);sheetEl.innerHTML=originalBuildSelectedBody(getData());status.textContent='Original text restored';setTimeout(()=>status.textContent='Template text locked',1400)};
+
+  // Clear only the currently selected contract version. Saved contracts and other templates stay untouched.
+  if(clearFormBtn){
+    clearFormBtn.addEventListener('click',()=>{
+      if(!confirm('გსურთ ამ არჩეული ხელშეკრულების ყველა შევსებული ველის გასუფთავება?'))return;
+      if(editMode)setEditing(false);
+      fieldIds.forEach(id=>{
+        const el=document.getElementById(id);
+        if(!el)return;
+        el.value = id==='currency' ? 'USD' : '';
+      });
+      if(typeof syncDeadlineTranslations==='function')syncDeadlineTranslations();
+      templateStates[currentType]=collectFields();
+      writeJson(STATES_KEY,templateStates);
+      render();
+      const oldText=clearFormBtn.textContent;
+      clearFormBtn.textContent='✓ გასუფთავებულია / Cleared';
+      clearFormBtn.disabled=true;
+      setTimeout(()=>{clearFormBtn.textContent=oldText;clearFormBtn.disabled=false},1200);
+    });
+  }
+
+  // Isolated data for each of the three templates.
+  function updateContractForm(){
+    const isDeposit=categoryEl.value==='deposit';
+    document.getElementById('durationFieldWrap').hidden=isDeposit;
+    document.getElementById('paymentDayWrap').hidden=isDeposit;
+    document.getElementById('depositDeadlineWrap').hidden=!isDeposit;
+    document.getElementById('amountLabel').textContent=isDeposit?'ბეს თანხა / Down payment amount':'ყოველთვიური ქირა / Monthly rent';
+    document.getElementById('landlordLegend').textContent=isDeposit?'ბეს მიმღები / Receiver':'გამქირავებელი / Landlord';
+    document.getElementById('tenantLegend').textContent=isDeposit?'ბეს გამცემი / Issuer':'დამქირავებელი / Tenant';
+  }
+  function switchTemplate(){
+    if(editMode)setEditing(false);
+    saveState(currentType);
+    currentType=stateKey();
+    loadState(currentType);
+    updateContractForm();
+    render();
+  }
+  typeEl.addEventListener('change',switchTemplate);
+  categoryEl.addEventListener('change',switchTemplate);
+  fieldIds.forEach(id=>{const e=document.getElementById(id);if(!e)return;const persist=()=>{saveState(currentType);if(!editMode&&!templateEdits[currentType])render()};e.addEventListener('input',persist);e.addEventListener('change',persist)});
+
+  // Saved contracts load into their own selected template only.
+  const oldRefresh=refreshSavedList;
+  refreshSavedList=async function(){await oldRefresh();document.querySelectorAll('.saved-item .load').forEach(btn=>{const old=btn.onclick;btn.onclick=function(ev){if(old)old.call(this,ev);currentType=stateKey();saveState(currentType);updateContractForm();render()}})};
+
+  // Initialize current selected template without copying values into the other two.
+  if(templateStates[currentType])loadState(currentType);else saveState(currentType);
+  updateContractForm();
+  render();
+
+  // Opening animation exists in the initial HTML, so it is visible from the first paint.
+  const splash=document.getElementById('geogreenSplash');
+  requestAnimationFrame(()=>{
+    document.body.classList.remove('geogreen-loading');
+    document.body.classList.add('geogreen-ready');
+  });
+  setTimeout(()=>{
+    if(!splash) return;
+    splash.classList.add('hide');
+    setTimeout(()=>splash.remove(),700);
+  },1650);
+})();
+</script>
+</body>
+</html>
